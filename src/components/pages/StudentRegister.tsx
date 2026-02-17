@@ -35,7 +35,7 @@ const WEEK_DAYS: { label: string; value: Weekday }[] = [
   { label: "Friday (Cultural Day/Owambe)", value: "FRIDAY" },
 ];
 
-const API_BASE = "http://localhost:5000";
+const API_BASE = "https://fyw-api.atlascard.xyz";
 
 export default function StudentRegister() {
   const router = useRouter();

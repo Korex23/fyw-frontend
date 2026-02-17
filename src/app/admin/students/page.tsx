@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
-const API_BASE = "http://localhost:5000";
+const API_BASE = "https://fyw-api.atlascard.xyz";
 
 type PaymentStatus = "NOT_PAID" | "PARTIALLY_PAID" | "FULLY_PAID";
 type PackageCode = "A" | "B" | "C" | "D";

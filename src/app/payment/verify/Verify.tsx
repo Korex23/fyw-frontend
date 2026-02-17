@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-const API_BASE = "http://localhost:5000";
+const API_BASE = "https://fyw-api.atlascard.xyz";
 
 type VerifyResponse = {
   success: boolean;

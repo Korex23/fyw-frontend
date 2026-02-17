@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Header } from "../common/Navbar";
 import { Field } from "../common/Input";
 
-const API_BASE = "http://localhost:5000";
+const API_BASE = "https://fyw-api.atlascard.xyz";
 
 export default function StudentLogin() {
   const router = useRouter();
