@@ -12,6 +12,7 @@ type Step = 1 | 2;
 type IdentifyPayload = {
   matricNumber: string;
   fullName: string;
+  gender: "male" | "female" | "";
   email?: string;
 };
 
@@ -42,6 +43,7 @@ export default function StudentRegister() {
   const [form, setForm] = useState<IdentifyPayload>({
     matricNumber: "",
     fullName: "",
+    gender: "",
     email: "",
   });
 
@@ -62,9 +64,11 @@ export default function StudentRegister() {
 
   const canContinue = useMemo(() => {
     return (
-      form.matricNumber.trim().length >= 6 && form.fullName.trim().length >= 3
+      form.matricNumber.trim().length >= 6 &&
+      form.fullName.trim().length >= 3 &&
+      (form.gender === "male" || form.gender === "female")
     );
-  }, [form.matricNumber, form.fullName]);
+  }, [form.matricNumber, form.fullName, form.gender]);
 
   const canSelectT = selectedDays.length === 1;
 
@@ -136,9 +140,9 @@ export default function StudentRegister() {
         body: JSON.stringify({
           matricNumber: form.matricNumber.trim(),
           fullName: form.fullName.trim(),
+          gender: form.gender,
           email: form.email?.trim() || undefined,
           packageCode: pkg.code,
-          // ✅ NEW: only include for T
           ...(pkg.code === "T" ? { selectedDays } : {}),
         }),
       });
@@ -237,6 +241,36 @@ export default function StudentRegister() {
                     setForm((p) => ({ ...p, fullName: e.target.value }))
                   }
                 />
+
+                {/* Gender */}
+                <div>
+                  <p className="mb-2 text-sm font-bold text-slate-700">
+                    Gender <span className="text-red-500">*</span>
+                  </p>
+                  <div className="flex gap-3">
+                    {(["male", "female"] as const).map((g) => (
+                      <label
+                        key={g}
+                        className={[
+                          "flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border py-3 text-sm font-bold capitalize transition",
+                          form.gender === g
+                            ? "border-[#1B5E20] bg-[#1B5E20]/10 text-[#1B5E20]"
+                            : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100",
+                        ].join(" ")}
+                      >
+                        <input
+                          type="radio"
+                          name="gender"
+                          value={g}
+                          checked={form.gender === g}
+                          onChange={() => setForm((p) => ({ ...p, gender: g }))}
+                          className="sr-only"
+                        />
+                        {g}
+                      </label>
+                    ))}
+                  </div>
+                </div>
 
                 <Field
                   label="Email Address"
