@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Header } from "../common/Navbar";
 import { Field } from "../common/Input";
 import { parseApiError } from "@/utils/helpers";
@@ -15,6 +15,16 @@ export default function StudentLogin() {
   const [matricNumber, setMatricNumber] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [redirecting, setRedirecting] = useState(false);
+
+  // Auto-login if a session is stored
+  useEffect(() => {
+    const stored = localStorage.getItem("fyw_matric");
+    if (stored) {
+      setRedirecting(true);
+      router.replace(`/dashboard/${encodeURIComponent(stored)}`);
+    }
+  }, [router]);
 
   const canSubmit = matricNumber.trim().length >= 6;
 
@@ -38,6 +48,7 @@ export default function StudentLogin() {
       // Optional: validate shape, but we mainly use this as existence check here
       await res.json();
 
+      localStorage.setItem("fyw_matric", matricNumber.trim());
       router.push(`/dashboard/${encodeURIComponent(matricNumber.trim())}`);
     } catch (err: any) {
       setError(err?.message ?? "Failed to check status");
@@ -45,6 +56,19 @@ export default function StudentLogin() {
       setLoading(false);
     }
   };
+
+  if (redirecting) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#F9FAFB]">
+        <div className="flex flex-col items-center gap-3 text-slate-500">
+          <span className="material-symbols-outlined animate-spin text-3xl text-[#1B5E20]">
+            progress_activity
+          </span>
+          <p className="text-sm font-bold">Redirecting to your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-[#F9FAFB] font-sans text-slate-800">

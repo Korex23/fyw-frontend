@@ -22,7 +22,8 @@ export function Header() {
     }`;
 
   const homeActive = pathname === "/";
-  const registerActive = pathname === "/register" || pathname.startsWith("/register");
+  const registerActive =
+    pathname === "/register" || pathname.startsWith("/register");
   const loginActive = pathname === "/login";
 
   // Close on ESC
@@ -67,7 +68,7 @@ export function Header() {
         <div className="hidden items-center gap-8 md:flex">
           <nav className="flex items-center gap-9">
             <Link className={desktopLinkClass(homeActive)} href="/">
-              Packages
+              Home
             </Link>
             <Link className={desktopLinkClass(registerActive)} href="/register">
               Register
@@ -126,7 +127,7 @@ export function Header() {
               className={mobileLinkClass(homeActive)}
               href="/"
             >
-              Packages
+              Home
             </Link>
             <Link
               onClick={() => setOpen(false)}

@@ -169,8 +169,8 @@ export default function StudentRegister() {
 
       setStudent(st.student.matricNumber);
 
+      localStorage.setItem("fyw_matric", st.student.matricNumber);
       router.push(`/dashboard/${encodeURIComponent(st.student.matricNumber)}`);
-      alert(`Registered + Package ${pkg.code} selected successfully.`);
     } catch (e: any) {
       setError(e?.message ?? "Failed to register/select package");
     } finally {

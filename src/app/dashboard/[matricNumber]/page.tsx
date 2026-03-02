@@ -222,11 +222,12 @@ export default function DashboardPage() {
           <button
             className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-[#2D6A4F]"
             onClick={() => {
+              localStorage.removeItem("fyw_matric");
               router.push("/login");
             }}
           >
             <span className="material-symbols-outlined text-sm">
-              arrow_back
+              logout
             </span>
             Logout
           </button>
