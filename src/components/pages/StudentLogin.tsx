@@ -101,7 +101,10 @@ export default function StudentLogin() {
                 Not Started Paying?{" "}
                 <Link href={"/"} className="text-[#1b5e20]">
                   Get Started
-                  
+                </Link>
+              </p>
+            </form>
+          </div>
 
           <footer className="mt-12 flex items-center gap-2 text-xs text-slate-400">
             <span className="font-bold text-[#1B5E20]">Built by Korex</span>
