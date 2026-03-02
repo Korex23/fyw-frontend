@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 export function Header() {
   const [open, setOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const pathname = usePathname();
+  const router = useRouter();
 
   const desktopLinkClass = (isActive: boolean) =>
     `text-sm font-semibold transition-colors ${
@@ -25,6 +27,17 @@ export function Header() {
   const registerActive =
     pathname === "/register" || pathname.startsWith("/register");
   const loginActive = pathname === "/login";
+
+  useEffect(() => {
+    setIsLoggedIn(Boolean(localStorage.getItem("fyw_matric")));
+  }, [pathname]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("fyw_matric");
+    setIsLoggedIn(false);
+    setOpen(false);
+    router.push("/login");
+  };
 
   // Close on ESC
   useEffect(() => {
@@ -58,7 +71,6 @@ export function Header() {
               engineering
             </span>
           </div>
-
           <h2 className="text-lg font-bold tracking-tight text-[#1B5E20] sm:text-xl">
             ULES FYW PAY
           </h2>
@@ -67,54 +79,67 @@ export function Header() {
         {/* Desktop nav */}
         <div className="hidden items-center gap-8 md:flex">
           <nav className="flex items-center gap-9">
-            <Link className={desktopLinkClass(homeActive)} href="/">
-              Home
-            </Link>
-            <Link className={desktopLinkClass(registerActive)} href="/register">
-              Register
-            </Link>
-            <Link className={desktopLinkClass(loginActive)} href="/login">
-              Login
-            </Link>
-            <a
-              className="text-sm font-semibold text-slate-600 transition-colors hover:text-[#1B5E20]"
-              href=""
-              target="_blank"
-            >
-              Contact
-            </a>
+            {isLoggedIn ? (
+              <>
+                <a
+                  className="text-sm font-semibold text-slate-600 transition-colors hover:text-[#1B5E20]"
+                  href="#"
+                  target="_blank"
+                >
+                  Contact
+                </a>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex items-center gap-1.5 text-sm font-semibold text-slate-600 transition-colors hover:text-red-600"
+                >
+                  <span className="material-symbols-outlined text-base">
+                    logout
+                  </span>
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link className={desktopLinkClass(homeActive)} href="/">
+                  Packages
+                </Link>
+                <Link
+                  className={desktopLinkClass(registerActive)}
+                  href="/register"
+                >
+                  Register
+                </Link>
+                <Link className={desktopLinkClass(loginActive)} href="/login">
+                  Login
+                </Link>
+                <a
+                  className="text-sm font-semibold text-slate-600 transition-colors hover:text-[#1B5E20]"
+                  href="#"
+                  target="_blank"
+                >
+                  Contact
+                </a>
+              </>
+            )}
           </nav>
         </div>
 
         {/* Mobile toggle */}
-        {open && (
-          <button
-            type="button"
-            aria-label="Toggle navigation"
-            aria-expanded={open}
-            onClick={() => setOpen(false)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 md:hidden"
-          >
-            <span className="material-symbols-outlined text-2xl">
-              {open ? "close" : "menu"}
-            </span>
-          </button>
-        )}
-        {!open && (
-          <button
-            type="button"
-            aria-label="Toggle navigation"
-            aria-expanded={open}
-            onClick={() => setOpen((v) => !v)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 md:hidden"
-          >
-            <span className="material-symbols-outlined text-2xl">
-              {open ? "close" : "menu"}
-            </span>
-          </button>
-        )}
+        <button
+          type="button"
+          aria-label="Toggle navigation"
+          aria-expanded={open}
+          onClick={() => setOpen((v) => !v)}
+          className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 md:hidden"
+        >
+          <span className="material-symbols-outlined text-2xl">
+            {open ? "close" : "menu"}
+          </span>
+        </button>
       </div>
 
+      {/* Mobile panel */}
       <div
         className={`md:hidden ${
           open ? "block" : "hidden"
@@ -122,42 +147,59 @@ export function Header() {
       >
         <div ref={panelRef} className="px-4 py-4">
           <nav className="flex flex-col gap-2">
-            <Link
-              onClick={() => setOpen(false)}
-              className={mobileLinkClass(homeActive)}
-              href="/"
-            >
-              Home
-            </Link>
-            <Link
-              onClick={() => setOpen(false)}
-              className={mobileLinkClass(registerActive)}
-              href="/register"
-            >
-              Register
-            </Link>
-            <Link
-              onClick={() => setOpen(false)}
-              className={mobileLinkClass(loginActive)}
-              href="/login"
-            >
-              Login
-            </Link>
-            <a
-              onClick={() => setOpen(false)}
-              className="rounded-lg px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 hover:text-[#1B5E20]"
-              href="#"
-            >
-              Contact
-            </a>
+            {isLoggedIn ? (
+              <>
+                <a
+                  onClick={() => setOpen(false)}
+                  className="rounded-lg px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 hover:text-[#1B5E20]"
+                  href="#"
+                >
+                  Contact
+                </a>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-red-50 hover:text-red-600"
+                >
+                  <span className="material-symbols-outlined text-base">
+                    logout
+                  </span>
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  onClick={() => setOpen(false)}
+                  className={mobileLinkClass(homeActive)}
+                  href="/"
+                >
+                  Packages
+                </Link>
+                <Link
+                  onClick={() => setOpen(false)}
+                  className={mobileLinkClass(registerActive)}
+                  href="/register"
+                >
+                  Register
+                </Link>
+                <Link
+                  onClick={() => setOpen(false)}
+                  className={mobileLinkClass(loginActive)}
+                  href="/login"
+                >
+                  Login
+                </Link>
+                <a
+                  onClick={() => setOpen(false)}
+                  className="rounded-lg px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 hover:text-[#1B5E20]"
+                  href="#"
+                >
+                  Contact
+                </a>
+              </>
+            )}
           </nav>
-
-          {/* <button
-            onClick={() => setOpen(false)}
-            className="mt-4 flex h-11 w-full items-center justify-center rounded-lg bg-[#1B5E20] px-6 text-sm font-bold tracking-wide text-white shadow-md shadow-[#1B5E20]/10 transition-all hover:brightness-110"
-          >
-            Support
-          </button> */}
         </div>
       </div>
     </header>
