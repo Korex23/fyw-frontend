@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Header } from "@/components/common/Navbar";
-import { formatNaira } from "@/utils/helpers";
+import { formatNaira, parseApiError } from "@/utils/helpers";
 import { useParams, useRouter } from "next/navigation";
 
 const API_BASE = "https://fyw-api.atlascard.xyz";
@@ -80,9 +80,8 @@ export default function DashboardPage() {
         });
 
         if (!res.ok) {
-          if (res.status === 404) throw new Error("Student not found.");
-          const text = await res.text().catch(() => "");
-          throw new Error(`Failed: ${res.status} ${res.statusText} ${text}`);
+          const body = await res.json().catch(() => ({}));
+          throw new Error(parseApiError(res.status, body));
         }
 
         const json = (await res.json()) as StudentStatusResponse;
@@ -141,10 +140,8 @@ export default function DashboardPage() {
         body: JSON.stringify({ matricNumber, newPackageCode }),
       });
       if (!res.ok) {
-        const json = await res.json().catch(() => null);
-        throw new Error(
-          json?.message ?? `Upgrade failed: ${res.status} ${res.statusText}`,
-        );
+        const body = await res.json().catch(() => ({}));
+        throw new Error(parseApiError(res.status, body));
       }
       window.location.reload();
     } catch (e: any) {
@@ -169,10 +166,8 @@ export default function DashboardPage() {
     });
 
     if (!response.ok) {
-      const text = await response.text().catch(() => "");
-      alert(
-        `Payment initialization failed: ${response.status} ${response.statusText} ${text}`,
-      );
+      const body = await response.json().catch(() => ({}));
+      setError(parseApiError(response.status, body));
       return;
     }
 

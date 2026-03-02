@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { parseApiError } from "@/utils/helpers";
 
 const API_BASE = "https://fyw-api.atlascard.xyz";
 
@@ -56,17 +57,10 @@ export default function PaymentVerifyPage() {
           { cache: "no-store" },
         );
 
-        if (!res.ok) {
-          const text = await res.text().catch(() => "");
-          throw new Error(
-            `Verify failed: ${res.status} ${res.statusText} ${text}`,
-          );
-        }
+        const json = (await res.json().catch(() => ({}))) as VerifyResponse;
 
-        const json = (await res.json()) as VerifyResponse;
-
-        if (!json.success) {
-          throw new Error(json.message ?? "Payment verification failed.");
+        if (!res.ok || !json.success) {
+          throw new Error(parseApiError(res.status, json));
         }
 
         const matricNumber = extractMatricNumber(json);

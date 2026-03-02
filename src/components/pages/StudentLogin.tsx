@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Header } from "../common/Navbar";
 import { Field } from "../common/Input";
+import { parseApiError } from "@/utils/helpers";
 
 const API_BASE = "https://fyw-api.atlascard.xyz";
 
@@ -30,11 +31,8 @@ export default function StudentLogin() {
       });
 
       if (!res.ok) {
-        if (res.status === 404) {
-          throw new Error("Student not found. Please Get Started first.");
-        }
-        const text = await res.text().catch(() => "");
-        throw new Error(`Failed: ${res.status} ${res.statusText} ${text}`);
+        const body = await res.json().catch(() => ({}));
+        throw new Error(parseApiError(res.status, body));
       }
 
       // Optional: validate shape, but we mainly use this as existence check here

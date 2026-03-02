@@ -6,6 +6,7 @@ import { Header } from "../common/Navbar";
 import { Field } from "../common/Input";
 import { useRouter } from "next/navigation";
 import type { Pkg } from "@/types";
+import { parseApiError } from "@/utils/helpers";
 
 type Step = 1 | 2;
 
@@ -148,10 +149,8 @@ export default function StudentRegister() {
       });
 
       if (!response.ok) {
-        const text = await response.text().catch(() => "");
-        throw new Error(
-          `Identify failed: ${response.status} ${response.statusText} ${text}`,
-        );
+        const body = await response.json().catch(() => ({}));
+        throw new Error(parseApiError(response.status, body));
       }
 
       const json = await response.json();
