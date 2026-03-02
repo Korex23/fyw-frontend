@@ -97,7 +97,7 @@ export default function StudentLogin() {
 
               <p className="mb-5 text-[14px] font-bold tracking-[0.05em] text-slate-400">
                 Not Started Paying?{" "}
-                <Link href={"/"} className="text-[#1b5e20]">
+                <Link href={"/register"} className="text-[#1b5e20]">
                   Get Started
                 </Link>
               </p>

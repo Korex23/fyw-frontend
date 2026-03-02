@@ -22,8 +22,8 @@ export function Header() {
     }`;
 
   const homeActive = pathname === "/";
-  const packagesActive =
-    pathname === "/packages" || pathname.startsWith("/packages/");
+  const registerActive = pathname === "/register" || pathname.startsWith("/register");
+  const loginActive = pathname === "/login";
 
   // Close on ESC
   useEffect(() => {
@@ -67,10 +67,13 @@ export function Header() {
         <div className="hidden items-center gap-8 md:flex">
           <nav className="flex items-center gap-9">
             <Link className={desktopLinkClass(homeActive)} href="/">
-              Home
-            </Link>
-            <Link className={desktopLinkClass(packagesActive)} href="/packages">
               Packages
+            </Link>
+            <Link className={desktopLinkClass(registerActive)} href="/register">
+              Register
+            </Link>
+            <Link className={desktopLinkClass(loginActive)} href="/login">
+              Login
             </Link>
             <a
               className="text-sm font-semibold text-slate-600 transition-colors hover:text-[#1B5E20]"
@@ -123,14 +126,21 @@ export function Header() {
               className={mobileLinkClass(homeActive)}
               href="/"
             >
-              Home
+              Packages
             </Link>
             <Link
               onClick={() => setOpen(false)}
-              className={mobileLinkClass(packagesActive)}
-              href="/packages"
+              className={mobileLinkClass(registerActive)}
+              href="/register"
             >
-              Packages
+              Register
+            </Link>
+            <Link
+              onClick={() => setOpen(false)}
+              className={mobileLinkClass(loginActive)}
+              href="/login"
+            >
+              Login
             </Link>
             <a
               onClick={() => setOpen(false)}

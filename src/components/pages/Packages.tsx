@@ -21,17 +21,17 @@ const SCHEDULE = [
     icon: "business_center",
     color: "bg-slate-800",
     description:
-      "Kick off the week in sharp corporate attire. Networking, speeches from alumni, and a formal evening dinner.",
+      "Kick off the week in sharp corporate attire. Networking, speeches from alumni, and a formal afternoon programme.",
   },
   {
     key: "TUE",
     short: "Tue",
     day: "Tuesday",
-    theme: "Denim Day",
+    theme: "Cowboy Themed Denim Day",
     icon: "style",
     color: "bg-blue-700",
     description:
-      "Rock your best denim fit. Styled photo ops, music, and a vibrant daytime hangout with your class.",
+      "Saddle up in your best cowboy-denim fit. Themed photo ops, music, and a vibrant daytime hangout with your class.",
   },
   {
     key: "WED",
@@ -174,7 +174,7 @@ export default function Packages() {
               </span>
             </a>
             <Link
-              href="/"
+              href="/register"
               className="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-7 py-3.5 font-bold text-white backdrop-blur transition hover:bg-white/20"
             >
               Register Now
@@ -383,7 +383,7 @@ export default function Packages() {
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <Link
-              href="/"
+              href="/register"
               className="inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 font-bold text-[#1B5E20] shadow-lg transition hover:brightness-95"
             >
               Register Now
@@ -395,7 +395,7 @@ export default function Packages() {
               href="/login"
               className="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-8 py-4 font-bold text-white backdrop-blur transition hover:bg-white/20"
             >
-              Already Registered? Login
+              Already Registered? Log In
             </Link>
           </div>
         </div>
@@ -518,7 +518,7 @@ function PackageCard({ pkg, featured }: { pkg: Pkg; featured?: boolean }) {
 
         {/* CTA — links to registration with package pre-selected */}
         <Link
-          href={`/?package=${pkg.code}`}
+          href={`/register?package=${pkg.code}`}
           className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition ${
             featured
               ? "bg-[#2D6A4F] text-white hover:brightness-110"
