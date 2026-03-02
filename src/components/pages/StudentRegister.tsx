@@ -27,12 +27,10 @@ type Student = {
 
 type Weekday = "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY";
 
-const WEEK_DAYS: { label: string; value: Weekday }[] = [
-  { label: "Monday (Corporate Day)", value: "MONDAY" },
-  { label: "Tuesday (Cowboy Themed Denim Day)", value: "TUESDAY" },
-  { label: "Wednesday (Jersey Day/Inter-house Sports)", value: "WEDNESDAY" },
-  { label: "Thursday (Costume Day)", value: "THURSDAY" },
-  { label: "Friday (Cultural Day/Owambe)", value: "FRIDAY" },
+const PICKER_DAYS: { label: string; value: Weekday }[] = [
+  { label: "Tuesday (Denim Day)", value: "TUESDAY" },
+  { label: "Wednesday (Costume Day)", value: "WEDNESDAY" },
+  { label: "Thursday (Jersey Day)", value: "THURSDAY" },
 ];
 
 const API_BASE = "https://fyw-api.atlascard.xyz";
@@ -68,7 +66,7 @@ export default function StudentRegister() {
     );
   }, [form.matricNumber, form.fullName]);
 
-  const canSelectT = selectedDays.length === 2;
+  const canSelectT = selectedDays.length === 1;
 
   // Fetch packages ONLY when we enter step 2
   useEffect(() => {
@@ -110,14 +108,11 @@ export default function StudentRegister() {
     setStep(2);
   };
 
-  // ✅ NEW: toggle day picker (max 2)
   function toggleDay(day: Weekday) {
     setDaysError(null);
-
     setSelectedDays((prev) => {
-      if (prev.includes(day)) return prev.filter((d) => d !== day);
-      if (prev.length >= 2) return prev;
-      return [...prev, day];
+      if (prev.includes(day)) return [];
+      return [day];
     });
   }
 
@@ -126,9 +121,8 @@ export default function StudentRegister() {
     setError(null);
     setDaysError(null);
 
-    // ✅ NEW: if package is T, enforce 2 selected days
-    if (pkg.code === "T" && selectedDays.length !== 2) {
-      setDaysError("Please select exactly two days (Monday to Friday).");
+    if (pkg.code === "T" && selectedDays.length !== 1) {
+      setDaysError("Please select exactly one additional day (Tuesday, Wednesday, or Thursday).");
       return;
     }
 
@@ -330,26 +324,36 @@ export default function StudentRegister() {
                   )}
                 </div>
 
-                {/* ✅ NEW: Day picker for package T */}
+                {/* Day picker — Corporate Plus (T) only */}
                 <div className="mb-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
                   <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <p className="text-sm font-black text-slate-900">
-                        Select Two Days
+                        Select One Additional Day
                       </p>
                       <p className="text-xs font-medium text-slate-500">
-                        This is required only if you choose package{" "}
-                        <span className="font-black">Two Day Experience</span>.
+                        Required for{" "}
+                        <span className="font-black">Corporate Plus</span>.
+                        Monday is always included.
                       </p>
                     </div>
 
                     <div className="mt-2 text-xs font-bold text-slate-600 sm:mt-0">
-                      {selectedDays.length}/2 selected
+                      {selectedDays.length}/1 selected
                     </div>
                   </div>
 
-                  <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
-                    {WEEK_DAYS.map((d) => {
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <span className="cursor-not-allowed rounded-xl bg-[#1B5E20] px-3 py-2 text-xs font-black uppercase text-white opacity-60">
+                      Monday (Corporate Day)
+                    </span>
+                    <span className="text-xs font-bold text-slate-400">
+                      + pick one:
+                    </span>
+                  </div>
+
+                  <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    {PICKER_DAYS.map((d) => {
                       const active = selectedDays.includes(d.value);
                       return (
                         <button
@@ -378,9 +382,10 @@ export default function StudentRegister() {
                   <div className="mt-3 text-[11px] font-bold text-slate-500">
                     Selected:{" "}
                     <span className="text-slate-700">
+                      Monday
                       {selectedDays.length
-                        ? selectedDays.join(", ")
-                        : "None yet"}
+                        ? `, ${selectedDays[0]}`
+                        : " (+ one more required for Corporate Plus)"}
                     </span>
                   </div>
                 </div>
@@ -499,7 +504,7 @@ function PackageCard(props: {
         className="w-full rounded-lg bg-emerald-50 py-2 text-sm font-bold text-[#2D6A4F] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
         title={
           pkg.code === "T" && disabled
-            ? "Select exactly two days before choosing Package T"
+            ? "Select one additional day before choosing Corporate Plus"
             : undefined
         }
       >
@@ -508,8 +513,9 @@ function PackageCard(props: {
 
       {pkg.code === "T" && disabled && (
         <p className="mt-2 text-[11px] font-bold text-slate-500">
-          Select exactly <span className="text-slate-700">two days</span> to
-          enable this package.
+          Select exactly{" "}
+          <span className="text-slate-700">one additional day</span> to enable
+          this package.
         </p>
       )}
     </div>

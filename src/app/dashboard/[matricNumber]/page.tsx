@@ -10,8 +10,9 @@ const API_BASE = "https://fyw-api.atlascard.xyz";
 
 type ApiPackage = {
   _id: string;
-  code: "F" | "T" | string;
+  code: "T" | "C" | "F" | string;
   name: string;
+  packageType?: "CORPORATE_PLUS" | "CORPORATE_OWAMBE" | "FULL" | string;
   price: number;
   benefits: string[];
 };
@@ -56,6 +57,17 @@ export default function DashboardPage() {
   const [outstanding, setOutstanding] = useState<number>(0);
 
   const [amount, setAmount] = useState<number>(0);
+
+  const [allPackages, setAllPackages] = useState<ApiPackage[]>([]);
+  const [upgrading, setUpgrading] = useState<string | null>(null);
+  const [upgradeError, setUpgradeError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/students/packages`, { cache: "no-store" })
+      .then((r) => r.json())
+      .then((json) => setAllPackages(json?.data ?? json))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const fetchStatus = async () => {
@@ -116,6 +128,31 @@ export default function DashboardPage() {
   }
 
   const isFullyPaid = student?.paymentStatus === "FULLY_PAID";
+
+  const upgradeOptions = allPackages.filter((p) => p.price > (pkg?.price ?? 0));
+
+  const handleUpgrade = async (newPackageCode: string) => {
+    setUpgradeError(null);
+    setUpgrading(newPackageCode);
+    try {
+      const res = await fetch(`${API_BASE}/api/students/upgrade-package`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ matricNumber, newPackageCode }),
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => null);
+        throw new Error(
+          json?.message ?? `Upgrade failed: ${res.status} ${res.statusText}`,
+        );
+      }
+      window.location.reload();
+    } catch (e: any) {
+      setUpgradeError(e?.message ?? "Upgrade failed");
+    } finally {
+      setUpgrading(null);
+    }
+  };
 
   const onPayNow = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -406,11 +443,75 @@ export default function DashboardPage() {
                     {b}
                   </div>
                 ))}
-                Selected Days: {student.selectedDays.join(", ")}
+                {pkg.code === "F" && (
+                  <div className="mt-4 text-sm font-medium opacity-80">
+                    Days: All 5 Days
+                  </div>
+                )}
+                {pkg.code === "C" && (
+                  <div className="mt-4 text-sm font-medium opacity-80">
+                    Days: Monday + Friday
+                  </div>
+                )}
+                {pkg.code === "T" && student.selectedDays?.length > 0 && (
+                  <div className="mt-4 text-sm font-medium opacity-80">
+                    Days: {student.selectedDays.join(", ")}
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
+        {upgradeOptions.length > 0 && (
+          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="mb-1 text-lg font-black text-slate-900">
+              Upgrade Your Package
+            </h3>
+            <p className="mb-4 text-sm text-slate-500">
+              Upgrade to a higher package. Previously paid amounts are
+              preserved — you only pay the difference.
+            </p>
+
+            {upgradeError && (
+              <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {upgradeError}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {upgradeOptions.map((option) => {
+                const diff = option.price - (pkg?.price ?? 0);
+                return (
+                  <div
+                    key={option._id}
+                    className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-4"
+                  >
+                    <div>
+                      <p className="font-bold text-slate-900">{option.name}</p>
+                      <p className="text-sm text-slate-500">
+                        ₦{option.price.toLocaleString("en-NG")} total
+                      </p>
+                      <p className="text-xs text-slate-400">
+                        +₦{diff.toLocaleString("en-NG")} outstanding
+                        {totalPaid > 0
+                          ? ` (₦${totalPaid.toLocaleString("en-NG")} already paid)`
+                          : ""}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleUpgrade(option.code)}
+                      disabled={upgrading === option.code}
+                      className="rounded-lg bg-[#2D6A4F] px-4 py-2 text-sm font-bold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {upgrading === option.code ? "Upgrading..." : "Upgrade"}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </main>
 
       <footer className="mt-auto border-t border-[#E5E7EB] bg-white py-10">

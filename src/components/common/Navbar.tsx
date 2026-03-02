@@ -1,11 +1,29 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 export function Header() {
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement | null>(null);
+  const pathname = usePathname();
+
+  const desktopLinkClass = (isActive: boolean) =>
+    `text-sm font-semibold transition-colors ${
+      isActive ? "text-[#1B5E20]" : "text-slate-600 hover:text-[#1B5E20]"
+    }`;
+
+  const mobileLinkClass = (isActive: boolean) =>
+    `rounded-lg px-3 py-3 text-sm font-semibold transition ${
+      isActive
+        ? "bg-[#1B5E20]/10 text-[#1B5E20]"
+        : "text-slate-700 hover:bg-slate-50 hover:text-[#1B5E20]"
+    }`;
+
+  const homeActive = pathname === "/";
+  const packagesActive =
+    pathname === "/packages" || pathname.startsWith("/packages/");
 
   // Close on ESC
   useEffect(() => {
@@ -45,33 +63,24 @@ export function Header() {
           </h2>
         </div>
 
-        {/* Desktop nav
+        {/* Desktop nav */}
         <div className="hidden items-center gap-8 md:flex">
           <nav className="flex items-center gap-9">
-            <Link
-              className="text-sm font-semibold text-slate-600 transition-colors hover:text-[#1B5E20]"
-              href="#"
-            >
+            <Link className={desktopLinkClass(homeActive)} href="/">
               Home
             </Link>
-            <Link
-              className="text-sm font-semibold text-slate-600 transition-colors hover:text-[#1B5E20]"
-              href="#"
-            >
+            <Link className={desktopLinkClass(packagesActive)} href="/packages">
               Packages
             </Link>
-            <Link
+            <a
               className="text-sm font-semibold text-slate-600 transition-colors hover:text-[#1B5E20]"
-              href="#"
+              href=""
+              target="_blank"
             >
               Contact
-            </Link>
+            </a>
           </nav>
-
-          <button className="flex h-10 min-w-[84px] items-center justify-center rounded-lg bg-[#1B5E20] px-6 text-sm font-bold tracking-wide text-white shadow-md shadow-[#1B5E20]/10 transition-all hover:brightness-110">
-            Support
-          </button>
-        </div> */}
+        </div>
 
         {/* Mobile toggle */}
         {open && (
@@ -102,7 +111,6 @@ export function Header() {
         )}
       </div>
 
-      {/* Mobile panel */}
       <div
         className={`md:hidden ${
           open ? "block" : "hidden"
@@ -112,33 +120,33 @@ export function Header() {
           <nav className="flex flex-col gap-2">
             <Link
               onClick={() => setOpen(false)}
-              className="rounded-lg px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 hover:text-[#1B5E20]"
-              href="#"
+              className={mobileLinkClass(homeActive)}
+              href="/"
             >
               Home
             </Link>
             <Link
               onClick={() => setOpen(false)}
-              className="rounded-lg px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 hover:text-[#1B5E20]"
-              href="#"
+              className={mobileLinkClass(packagesActive)}
+              href="/packages"
             >
               Packages
             </Link>
-            <Link
+            <a
               onClick={() => setOpen(false)}
               className="rounded-lg px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 hover:text-[#1B5E20]"
               href="#"
             >
               Contact
-            </Link>
+            </a>
           </nav>
 
-          <button
+          {/* <button
             onClick={() => setOpen(false)}
             className="mt-4 flex h-11 w-full items-center justify-center rounded-lg bg-[#1B5E20] px-6 text-sm font-bold tracking-wide text-white shadow-md shadow-[#1B5E20]/10 transition-all hover:brightness-110"
           >
             Support
-          </button>
+          </button> */}
         </div>
       </div>
     </header>
