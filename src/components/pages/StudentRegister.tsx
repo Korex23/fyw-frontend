@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Header } from "../common/Navbar";
 import { Field } from "../common/Input";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { Pkg } from "@/types";
 import { parseApiError } from "@/utils/helpers";
 
@@ -37,8 +37,17 @@ const PICKER_DAYS: { label: string; value: Weekday }[] = [
 
 const API_BASE = "https://fyw-api.atlascard.xyz";
 
+const PACKAGE_LABELS: Record<string, string> = {
+  T: "Corporate Plus — ₦30,000",
+  C: "Corporate & Owambe — ₦40,000",
+  F: "Full Experience — ₦60,000",
+};
+
 export default function StudentRegister() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const preSelectedCode = searchParams.get("package")?.toUpperCase() ?? null;
+
   const [step, setStep] = useState<Step>(1);
 
   const [form, setForm] = useState<IdentifyPayload>({
@@ -282,6 +291,20 @@ export default function StudentRegister() {
                   }
                 />
 
+                {preSelectedCode && PACKAGE_LABELS[preSelectedCode] && (
+                  <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm">
+                    <span className="material-symbols-outlined text-base text-[#1B5E20]">
+                      check_circle
+                    </span>
+                    <span className="font-medium text-emerald-800">
+                      Pre-selected:{" "}
+                      <span className="font-black">
+                        {PACKAGE_LABELS[preSelectedCode]}
+                      </span>
+                    </span>
+                  </div>
+                )}
+
                 <button
                   type="submit"
                   disabled={!canContinue}
@@ -424,8 +447,8 @@ export default function StudentRegister() {
                 </div>
 
                 {loadingPackages ? (
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    {Array.from({ length: 4 }).map((_, i) => (
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {Array.from({ length: 3 }).map((_, i) => (
                       <div
                         key={i}
                         className="h-[280px] animate-pulse rounded-xl border border-slate-200 bg-slate-50"
@@ -433,12 +456,13 @@ export default function StudentRegister() {
                     ))}
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {packages.map((p) => (
                       <PackageCard
                         key={p._id}
                         pkg={p}
                         isTopChoice={p.code === "F"}
+                        isPreSelected={p.code === preSelectedCode}
                         loading={submittingPackage === p._id}
                         onSelect={() => handleSelectPackage(p)}
                         disabled={p.code === "T" && !canSelectT}
@@ -485,20 +509,28 @@ function StepPill(props: { active: boolean; label: string; text: string }) {
 function PackageCard(props: {
   pkg: Pkg;
   isTopChoice?: boolean;
+  isPreSelected?: boolean;
   loading?: boolean;
   onSelect: () => void;
-  disabled?: boolean; // ✅ NEW
+  disabled?: boolean;
 }) {
-  const { pkg, isTopChoice, loading, onSelect, disabled } = props;
+  const { pkg, isTopChoice, isPreSelected, loading, onSelect, disabled } = props;
 
   const isDisabled = Boolean(disabled) || Boolean(loading);
 
   return (
     <div
-      className={`relative flex flex-col rounded-xl border border-slate-200 bg-white p-6 shadow-sm ${
-        disabled ? "opacity-70" : ""
-      }`}
+      className={`relative flex flex-col rounded-xl border bg-white p-6 shadow-sm transition ${
+        isPreSelected
+          ? "border-[#1B5E20] ring-2 ring-[#1B5E20]/20"
+          : "border-slate-200"
+      } ${disabled ? "opacity-70" : ""}`}
     >
+      {isPreSelected && !isTopChoice && (
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-[#1B5E20] px-4 py-1 text-[10px] font-black uppercase text-white">
+          Your Pick
+        </div>
+      )}
       {isTopChoice && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-[#2D6A4F] px-4 py-1 text-[10px] font-black uppercase text-white">
           Top Choice
@@ -541,7 +573,7 @@ function PackageCard(props: {
             : undefined
         }
       >
-        {loading ? "Saving..." : "Select Package"}
+        {loading ? "Saving..." : isPreSelected ? "Confirm Selection" : "Select Package"}
       </button>
 
       {pkg.code === "T" && disabled && (
