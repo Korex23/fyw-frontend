@@ -48,6 +48,13 @@ export default function StudentRegister() {
   const searchParams = useSearchParams();
   const preSelectedCode = searchParams.get("package")?.toUpperCase() ?? null;
 
+  useEffect(() => {
+    const stored = localStorage.getItem("fyw_matric");
+    if (stored) {
+      router.replace(`/dashboard/${encodeURIComponent(stored)}`);
+    }
+  }, [router]);
+
   const [step, setStep] = useState<Step>(1);
 
   const [form, setForm] = useState<IdentifyPayload>({

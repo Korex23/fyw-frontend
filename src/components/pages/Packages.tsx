@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Header } from "../common/Navbar";
 import type { Pkg, PackageType } from "@/types";
 import { parseApiError } from "@/utils/helpers";
@@ -115,10 +116,19 @@ function getDays(packageType: PackageType | string): DayConfig[] {
 // ---------------------------------------------------------------------------
 
 export default function Packages() {
+  const router = useRouter();
   const [packages, setPackages] = useState<Pkg[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("fyw_matric");
+    if (stored) {
+      router.replace(`/dashboard/${encodeURIComponent(stored)}`);
+      return;
+    }
+  }, [router]);
 
   useEffect(() => {
     if (packages.length > 0) return;
