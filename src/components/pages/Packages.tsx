@@ -169,8 +169,8 @@ export default function Packages() {
             <span className="text-emerald-300">Engineering Journey</span>
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-base font-medium text-white/70 sm:text-lg">
-            Five days. Five themes. One celebration you will never forget.
-            Join your fellow final year engineers for ULES FYW 2026.
+            Five days. Five themes. One celebration you will never forget. Join
+            your fellow final year engineers for ULES FYW 2026.
           </p>
 
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
@@ -222,10 +222,26 @@ export default function Packages() {
 
           <div className="grid grid-cols-2 gap-3">
             {[
-              { icon: "groups", label: "Final Year Students", sub: "All engineering departments" },
-              { icon: "calendar_month", label: "5 Themed Days", sub: "Mon – Fri, May 2026" },
-              { icon: "restaurant", label: "Meals Included", sub: "On every event day" },
-              { icon: "confirmation_number", label: "Official Invite", sub: "Printed & digital" },
+              {
+                icon: "groups",
+                label: "Final Year Students",
+                sub: "All engineering departments",
+              },
+              {
+                icon: "calendar_month",
+                label: "5 Themed Days",
+                sub: "Mon – Fri, May 2026",
+              },
+              {
+                icon: "restaurant",
+                label: "Meals Included",
+                sub: "On every event day",
+              },
+              {
+                icon: "confirmation_number",
+                label: "Official Invite",
+                sub: "Printed & digital",
+              },
             ].map((item) => (
               <div
                 key={item.label}
@@ -289,7 +305,10 @@ export default function Packages() {
       </section>
 
       {/* ── PACKAGES ─────────────────────────────────────────────────────── */}
-      <section id="packages" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
+      <section
+        id="packages"
+        className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20"
+      >
         <div className="mb-4 text-center">
           <span className="text-xs font-black uppercase tracking-widest text-[#1B5E20]">
             Pricing
@@ -366,7 +385,13 @@ export default function Packages() {
                   <span className="text-sm font-black text-slate-900">
                     {faq.q}
                   </span>
-                  <span className="material-symbols-outlined mt-0.5 shrink-0 text-base text-slate-400 transition-transform" style={{ transform: openFaq === i ? "rotate(180deg)" : "rotate(0deg)" }}>
+                  <span
+                    className="material-symbols-outlined mt-0.5 shrink-0 text-base text-slate-400 transition-transform"
+                    style={{
+                      transform:
+                        openFaq === i ? "rotate(180deg)" : "rotate(0deg)",
+                    }}
+                  >
                     expand_more
                   </span>
                 </button>
@@ -388,8 +413,8 @@ export default function Packages() {
             Ready to Secure Your Spot?
           </h2>
           <p className="mx-auto mt-4 max-w-md text-sm font-medium text-white/70">
-            Spots are limited. Register now and pay at your own pace — no need
-            to pay in full upfront.
+            Register now and pay at your own pace — no need to pay in full
+            upfront.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <Link
@@ -492,8 +517,8 @@ function PackageCard({ pkg, featured }: { pkg: Pkg; featured?: boolean }) {
                   d.state === "fixed"
                     ? "bg-[#1B5E20] text-white"
                     : d.state === "choice"
-                    ? "border-2 border-dashed border-[#1B5E20] bg-[#1B5E20]/5 text-[#1B5E20]"
-                    : "bg-slate-100 text-slate-300",
+                      ? "border-2 border-dashed border-[#1B5E20] bg-[#1B5E20]/5 text-[#1B5E20]"
+                      : "bg-slate-100 text-slate-300",
                 ].join(" ")}
               >
                 <span className="text-[9px] font-black uppercase">
@@ -506,8 +531,8 @@ function PackageCard({ pkg, featured }: { pkg: Pkg; featured?: boolean }) {
             {choiceCount > 0
               ? "Monday always included · pick 1 of Tue / Wed / Thu"
               : fixedCount === 5
-              ? "All 5 days included"
-              : "Both days fixed — no selection needed"}
+                ? "All 5 days included"
+                : "Both days fixed — no selection needed"}
           </p>
         </div>
 
