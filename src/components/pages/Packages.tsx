@@ -18,41 +18,41 @@ const SCHEDULE = [
     key: "MON",
     short: "Mon",
     day: "Monday",
-    theme: "Corporate Day",
+    theme: "Corporate Day & Career Fair",
     icon: "business_center",
     color: "bg-slate-800",
     description:
-      "Kick off the week in sharp corporate attire. Networking, speeches from alumni, and a formal afternoon programme.",
+      "Kick off the week suited and booted. Corporate attire, alumni networking, industry talks, and a formal afternoon programme to launch FYW in style.",
   },
   {
     key: "TUE",
     short: "Tue",
     day: "Tuesday",
-    theme: "Cowboy Themed Denim Day",
+    theme: "Retro-Themed Denim Day",
     icon: "style",
     color: "bg-blue-700",
     description:
-      "Saddle up in your best cowboy-denim fit. Themed photo ops, music, and a vibrant daytime hangout with your class.",
+      "Pull out your best retro denim fit and turn back the clock. Themed photo ops, old-school music, and a laid-back daytime hangout with your classmates.",
   },
   {
     key: "WED",
     short: "Wed",
     day: "Wednesday",
-    theme: "Costume Day",
-    icon: "theater_comedy",
+    theme: "Jersey Day & Inter-House Sports",
+    icon: "sports",
     color: "bg-purple-700",
     description:
-      "Dress up as your alter ego. Creative costumes, a best-dressed competition, and non-stop entertainment.",
+      "Rep your favourite team's jersey and compete for house glory. A full day of inter-house games, friendly rivalries, and high-energy sports action.",
   },
   {
     key: "THU",
     short: "Thu",
     day: "Thursday",
-    theme: "Jersey Day",
-    icon: "sports",
+    theme: "Costume Day & Runway Show",
+    icon: "theater_comedy",
     color: "bg-orange-600",
     description:
-      "Rep your favourite sports team. Games, inter-house competitions, and lots of energy all day.",
+      "Unleash your alter ego in your most creative costume. A best-dressed competition, a full runway show, and non-stop entertainment from start to finish.",
   },
   {
     key: "FRI",
@@ -62,7 +62,7 @@ const SCHEDULE = [
     icon: "celebration",
     color: "bg-[#8B0000]",
     description:
-      "The grand finale. Traditional attire, live music, cultural displays, and the biggest Owambe of the year.",
+      "The grand finale. Rock your finest traditional attire, enjoy live music, cultural displays, and the biggest Owambe send-off of your engineering career.",
   },
 ];
 
@@ -232,11 +232,7 @@ export default function Packages() {
                 label: "5 Themed Days",
                 sub: "Mon – Fri, May 2026",
               },
-              {
-                icon: "restaurant",
-                label: "Meals Included",
-                sub: "On every event day",
-              },
+
               {
                 icon: "confirmation_number",
                 label: "Official Invite",

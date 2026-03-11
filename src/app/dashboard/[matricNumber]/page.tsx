@@ -62,6 +62,11 @@ export default function DashboardPage() {
   const [upgrading, setUpgrading] = useState<string | null>(null);
   const [upgradeError, setUpgradeError] = useState<string | null>(null);
 
+  const [downgradePendingCode, setDowngradePendingCode] = useState<string | null>(null);
+  const [downgradeDay, setDowngradeDay] = useState<string>("");
+  const [downgrading, setDowngrading] = useState(false);
+  const [downgradeError, setDowngradeError] = useState<string | null>(null);
+
   useEffect(() => {
     fetch(`${API_BASE}/api/students/packages`, { cache: "no-store" })
       .then((r) => r.json())
@@ -129,6 +134,39 @@ export default function DashboardPage() {
   const isFullyPaid = student?.paymentStatus === "FULLY_PAID";
 
   const upgradeOptions = allPackages.filter((p) => p.price > (pkg?.price ?? 0));
+  const downgradeOptions = allPackages.filter((p) => p.price < (pkg?.price ?? 0));
+
+  const downgradePendingPkg = allPackages.find((p) => p.code === downgradePendingCode) ?? null;
+
+  const handleDowngrade = async () => {
+    if (!downgradePendingCode) return;
+    if (downgradePendingPkg?.packageType === "CORPORATE_PLUS" && !downgradeDay) {
+      setDowngradeError("Please select a day (Tuesday, Wednesday, or Thursday).");
+      return;
+    }
+    setDowngradeError(null);
+    setDowngrading(true);
+    try {
+      const body: Record<string, unknown> = { matricNumber, newPackageCode: downgradePendingCode };
+      if (downgradePendingPkg?.packageType === "CORPORATE_PLUS" && downgradeDay) {
+        body.selectedDays = [downgradeDay];
+      }
+      const res = await fetch(`${API_BASE}/api/students/downgrade-package`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(parseApiError(res.status, errBody));
+      }
+      window.location.reload();
+    } catch (e: any) {
+      setDowngradeError(e?.message ?? "Downgrade failed");
+    } finally {
+      setDowngrading(false);
+    }
+  };
 
   const handleUpgrade = async (newPackageCode: string) => {
     setUpgradeError(null);
@@ -506,6 +544,114 @@ export default function DashboardPage() {
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {!isFullyPaid && downgradeOptions.length > 0 && (
+          <div className="rounded-xl border border-amber-200 bg-white p-6 shadow-sm">
+            <h3 className="mb-1 text-lg font-black text-slate-900">
+              Downgrade Your Package
+            </h3>
+            <p className="mb-4 text-sm text-slate-500">
+              Switch to a lower-priced package. Any amount you have already paid is preserved.
+            </p>
+
+            {downgradeError && (
+              <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {downgradeError}
+              </div>
+            )}
+
+            {downgradePendingCode ? (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                <p className="mb-3 text-sm font-bold text-amber-900">
+                  Confirm downgrade to{" "}
+                  <span className="text-amber-700">{downgradePendingPkg?.name}</span> (
+                  {formatNaira(downgradePendingPkg?.price ?? 0)})
+                </p>
+                <p className="mb-4 text-xs text-amber-800">
+                  Any partial payments will be preserved. Your outstanding balance will be
+                  recalculated based on the new package price.
+                </p>
+
+                {downgradePendingPkg?.packageType === "CORPORATE_PLUS" && (
+                  <div className="mb-4">
+                    <p className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-600">
+                      Select your additional day
+                    </p>
+                    <div className="flex gap-2">
+                      {["TUESDAY", "WEDNESDAY", "THURSDAY"].map((day) => (
+                        <button
+                          key={day}
+                          type="button"
+                          onClick={() => setDowngradeDay(day)}
+                          className={`rounded-lg border px-4 py-2 text-xs font-bold capitalize transition ${
+                            downgradeDay === day
+                              ? "border-[#2D6A4F] bg-[#2D6A4F] text-white"
+                              : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                          }`}
+                        >
+                          {day.charAt(0) + day.slice(1).toLowerCase()}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={handleDowngrade}
+                    disabled={downgrading}
+                    className="rounded-lg bg-amber-600 px-5 py-2 text-sm font-bold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {downgrading ? "Downgrading..." : "Confirm Downgrade"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDowngradePendingCode(null);
+                      setDowngradeDay("");
+                      setDowngradeError(null);
+                    }}
+                    disabled={downgrading}
+                    className="rounded-lg border border-slate-200 bg-white px-5 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {downgradeOptions.map((option) => (
+                  <div
+                    key={option._id}
+                    className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-4"
+                  >
+                    <div>
+                      <p className="font-bold text-slate-900">{option.name}</p>
+                      <p className="text-sm text-slate-500">
+                        ₦{option.price.toLocaleString("en-NG")} total
+                      </p>
+                      <p className="text-xs text-slate-400">
+                        Save ₦{((pkg?.price ?? 0) - option.price).toLocaleString("en-NG")} vs. current
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDowngradePendingCode(option.code);
+                        setDowngradeDay("");
+                        setDowngradeError(null);
+                      }}
+                      className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-bold text-amber-800 transition hover:bg-amber-100"
+                    >
+                      Downgrade
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </main>

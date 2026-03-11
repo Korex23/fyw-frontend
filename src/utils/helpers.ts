@@ -35,6 +35,10 @@ const FRIENDLY_MESSAGES: Record<string, string> = {
   "Payment not found": "Payment record not found. Please check your reference.",
   "Can only upgrade to a higher-priced package. Downgrades are not allowed.":
     "You can only upgrade to a higher-priced package.",
+  "Cannot downgrade a package after payment is complete.":
+    "Downgrade is not available once payment is complete.",
+  "Can only downgrade to a lower-priced package. Upgrades are not allowed here.":
+    "You can only downgrade to a lower-priced package.",
   "Corporate Plus package requires exactly 1 additional day (Tuesday, Wednesday, or Thursday)":
     "Corporate Plus requires exactly one additional day — Tuesday, Wednesday, or Thursday.",
   "Corporate Plus package: additional day must be Tuesday, Wednesday, or Thursday":
