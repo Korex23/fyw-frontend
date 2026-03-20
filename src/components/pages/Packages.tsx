@@ -13,6 +13,12 @@ const API_BASE = "https://fyw-api.atlascard.xyz";
 // Static content
 // ---------------------------------------------------------------------------
 
+export type DayDescription = {
+  intro: string;
+  bullets?: string[];
+  note?: string;
+};
+
 const SCHEDULE = [
   {
     key: "MON",
@@ -21,8 +27,16 @@ const SCHEDULE = [
     theme: "Career & Corporate Day",
     icon: "business_center",
     color: "bg-slate-800",
-    description:
-      "This isn't your average career talk. We're bringing in people from tech, business, fashion, media, entertainment and more — plus professional headshots, CV submission opportunities, and real conversations about life after school.",
+    descriptionRaw: {
+      intro:
+        "This is not your regular engineering-only career talk. Not everyone is going into core engineering, and we get that. So we're bringing in people from tech, business, fashion, media, entertainment and more — different industries you can actually see yourself in.",
+      bullets: [
+        "Professional headshots",
+        "Opportunities to submit your CV",
+        "Real conversations about what life after school actually looks like",
+        "Item 7 (wink wink)",
+      ],
+    } satisfies DayDescription,
   },
   {
     key: "TUE",
@@ -31,8 +45,11 @@ const SCHEDULE = [
     theme: "Denim Day — Rodeo Themed",
     icon: "style",
     color: "bg-blue-700",
-    description:
-      "The Wild West is coming to campus — and it's going to be stylish. Denim on denim, cowboy hats, boots, bandanas, and a full rodeo-themed experience with creative photo setups made for content, made for memories.",
+    descriptionRaw: {
+      intro:
+        "Wild West, but make it fashion. This is your denim moment. Think denim on denim, cowboy hats, boots, bandanas, and western-inspired fits with actual style. We're creating a rodeo-themed experience with creative photo setups for content and memories.",
+      note: "Also, come ready to PARTY!",
+    } satisfies DayDescription,
   },
   {
     key: "WED",
@@ -41,8 +58,16 @@ const SCHEDULE = [
     theme: "Jersey Day & Inter-House Sports",
     icon: "sports",
     color: "bg-purple-700",
-    description:
-      "That inter-house energy from secondary school? We're bringing it back one last time. Your jersey colour is your team — sack race, egg race, relays, 5-a-side football, and team challenges. Party packs included.",
+    descriptionRaw: {
+      intro:
+        "Think about inter-house sports in primary/secondary school — the noise, the drums, the competition, the fun. Now imagine that with your final year set. You'll be grouped into colour teams according to the colour of your jersey, and it's game on:",
+      bullets: [
+        "Sack race, egg race, relays",
+        "5-a-side football",
+        "Fun team challenges",
+      ],
+      note: "Whether you're playing or just shouting support — it will be loud, competitive, and fun. Party packs included!",
+    } satisfies DayDescription,
   },
   {
     key: "THU",
@@ -51,8 +76,16 @@ const SCHEDULE = [
     theme: "Costume Day",
     icon: "theater_comedy",
     color: "bg-orange-600",
-    description:
-      "Range. We want to see it. Come as movie characters, fictional icons, or something completely unexpected. Costume runway, prizes for the most creative looks, and a party to close the day. Leave the safe choices at home.",
+    descriptionRaw: {
+      intro:
+        "This is your chance to actually show range. Come as movie characters, fictional icons, or something completely unexpected — think Teletubbies, Avatar, or even the GOAT himself: Lionel Messi.",
+      bullets: [
+        "A costume runway / showcase",
+        "Prizes for the most creative looks",
+        "A party to end the day",
+      ],
+      note: "This is not the day to play safe.",
+    } satisfies DayDescription,
   },
   {
     key: "FRI",
@@ -61,8 +94,12 @@ const SCHEDULE = [
     theme: "Cultural Day / Owambe",
     icon: "celebration",
     color: "bg-[#8B0000]",
-    description:
-      "The grand finale. Each department pairing represents a tribe — Kings & Queens, cultural entrances, a grand parade, and dance performances. Then we shift into a proper Owambe: food, drinks, souvenirs, music, and an after party.",
+    descriptionRaw: {
+      intro:
+        "The grand finale. A full Nigerian cultural experience. Each department pairing represents a tribe with kings and queens, cultural entrances, a grand parade, dance performances, and full energy. Then we shift into a proper Owambe:",
+      bullets: ["Good food", "Drinks", "Souvenirs", "Music, dancing and an after party"],
+      note: "This is the final send-off — and we're ending it properly. (Well, almost. There's still SIGNOUT PARTY.)",
+    } satisfies DayDescription,
   },
 ];
 
@@ -291,9 +328,19 @@ export default function Packages() {
                   </p>
                   <p className="mt-0.5 font-black text-white">{day.theme}</p>
                 </div>
-                <p className="text-xs font-medium leading-relaxed text-slate-400">
-                  {day.description}
-                </p>
+                <div className="flex flex-col gap-1.5 text-xs font-medium leading-relaxed text-slate-400">
+                  <p>{day.descriptionRaw.intro}</p>
+                  {day.descriptionRaw.bullets && (
+                    <ul className="ml-3 list-disc space-y-0.5">
+                      {day.descriptionRaw.bullets.map((b) => (
+                        <li key={b}>{b}</li>
+                      ))}
+                    </ul>
+                  )}
+                  {day.descriptionRaw.note && (
+                    <p className="italic">{day.descriptionRaw.note}</p>
+                  )}
+                </div>
               </div>
             ))}
           </div>
