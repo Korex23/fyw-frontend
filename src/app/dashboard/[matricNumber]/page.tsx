@@ -63,7 +63,7 @@ export default function DashboardPage() {
   const [upgradeError, setUpgradeError] = useState<string | null>(null);
 
   const [downgradePendingCode, setDowngradePendingCode] = useState<string | null>(null);
-  const [downgradeDay, setDowngradeDay] = useState<string>("");
+  const [downgradeDays, setDowngradeDays] = useState<string[]>([]);
   const [downgrading, setDowngrading] = useState(false);
   const [downgradeError, setDowngradeError] = useState<string | null>(null);
 
@@ -140,16 +140,20 @@ export default function DashboardPage() {
 
   const handleDowngrade = async () => {
     if (!downgradePendingCode) return;
-    if (downgradePendingPkg?.packageType === "CORPORATE_PLUS" && !downgradeDay) {
-      setDowngradeError("Please select a day (Tuesday, Wednesday, or Thursday).");
+    if (downgradePendingPkg?.packageType === "CORPORATE_PLUS" && downgradeDays.length !== 2) {
+      setDowngradeError("Please select exactly 2 days from Monday to Thursday.");
+      return;
+    }
+    if (downgradePendingPkg?.packageType === "CORPORATE_OWAMBE" && downgradeDays.length !== 1) {
+      setDowngradeError("Please select 1 additional day from Monday to Thursday.");
       return;
     }
     setDowngradeError(null);
     setDowngrading(true);
     try {
       const body: Record<string, unknown> = { matricNumber, newPackageCode: downgradePendingCode };
-      if (downgradePendingPkg?.packageType === "CORPORATE_PLUS" && downgradeDay) {
-        body.selectedDays = [downgradeDay];
+      if (downgradeDays.length > 0) {
+        body.selectedDays = downgradeDays;
       }
       const res = await fetch(`${API_BASE}/api/students/downgrade-package`, {
         method: "POST",
@@ -484,7 +488,10 @@ export default function DashboardPage() {
                 )}
                 {pkg.code === "C" && (
                   <div className="mt-4 text-sm font-medium opacity-80">
-                    Days: Monday + Friday
+                    Days: Friday
+                    {student.selectedDays?.filter((d) => d !== "FRIDAY").length > 0
+                      ? ` + ${student.selectedDays.filter((d) => d !== "FRIDAY").join(", ")}`
+                      : ""}
                   </div>
                 )}
                 {pkg.code === "T" && student.selectedDays?.length > 0 && (
@@ -576,17 +583,59 @@ export default function DashboardPage() {
 
                 {downgradePendingPkg?.packageType === "CORPORATE_PLUS" && (
                   <div className="mb-4">
-                    <p className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-600">
-                      Select your additional day
+                    <p className="mb-1 text-xs font-bold uppercase tracking-wider text-slate-600">
+                      Select 2 days (Mon – Thu)
                     </p>
-                    <div className="flex gap-2">
-                      {["TUESDAY", "WEDNESDAY", "THURSDAY"].map((day) => (
+                    <p className="mb-2 text-[11px] text-slate-500">
+                      {downgradeDays.length}/2 selected · Friday is not included
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      {["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY"].map((day) => (
                         <button
                           key={day}
                           type="button"
-                          onClick={() => setDowngradeDay(day)}
+                          onClick={() =>
+                            setDowngradeDays((prev) =>
+                              prev.includes(day)
+                                ? prev.filter((d) => d !== day)
+                                : prev.length < 2
+                                  ? [...prev, day]
+                                  : prev,
+                            )
+                          }
                           className={`rounded-lg border px-4 py-2 text-xs font-bold capitalize transition ${
-                            downgradeDay === day
+                            downgradeDays.includes(day)
+                              ? "border-[#2D6A4F] bg-[#2D6A4F] text-white"
+                              : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                          }`}
+                        >
+                          {day.charAt(0) + day.slice(1).toLowerCase()}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {downgradePendingPkg?.packageType === "CORPORATE_OWAMBE" && (
+                  <div className="mb-4">
+                    <p className="mb-1 text-xs font-bold uppercase tracking-wider text-slate-600">
+                      Select 1 additional day (Mon – Thu)
+                    </p>
+                    <p className="mb-2 text-[11px] text-slate-500">
+                      Friday is always included
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      {["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY"].map((day) => (
+                        <button
+                          key={day}
+                          type="button"
+                          onClick={() =>
+                            setDowngradeDays((prev) =>
+                              prev.includes(day) ? [] : [day],
+                            )
+                          }
+                          className={`rounded-lg border px-4 py-2 text-xs font-bold capitalize transition ${
+                            downgradeDays.includes(day)
                               ? "border-[#2D6A4F] bg-[#2D6A4F] text-white"
                               : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                           }`}
@@ -611,7 +660,7 @@ export default function DashboardPage() {
                     type="button"
                     onClick={() => {
                       setDowngradePendingCode(null);
-                      setDowngradeDay("");
+                      setDowngradeDays([]);
                       setDowngradeError(null);
                     }}
                     disabled={downgrading}
@@ -641,7 +690,7 @@ export default function DashboardPage() {
                       type="button"
                       onClick={() => {
                         setDowngradePendingCode(option.code);
-                        setDowngradeDay("");
+                        setDowngradeDays([]);
                         setDowngradeError(null);
                       }}
                       className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-bold text-amber-800 transition hover:bg-amber-100"

@@ -29,10 +29,11 @@ type Student = {
 
 type Weekday = "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY";
 
-const PICKER_DAYS: { label: string; value: Weekday }[] = [
-  { label: "Tuesday (Denim Day)", value: "TUESDAY" },
-  { label: "Wednesday (Costume Day)", value: "WEDNESDAY" },
-  { label: "Thursday (Jersey Day)", value: "THURSDAY" },
+const MON_THU_DAYS: { label: string; value: Weekday }[] = [
+  { label: "Monday", value: "MONDAY" },
+  { label: "Tuesday", value: "TUESDAY" },
+  { label: "Wednesday", value: "WEDNESDAY" },
+  { label: "Thursday", value: "THURSDAY" },
 ];
 
 const API_BASE = "https://fyw-api.atlascard.xyz";
@@ -75,8 +76,9 @@ export default function StudentRegister() {
   const [packages, setPackages] = useState<Pkg[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // ✅ NEW: state for "T" package day selection
-  const [selectedDays, setSelectedDays] = useState<Weekday[]>([]);
+  // Day selection state
+  const [selectedDaysT, setSelectedDaysT] = useState<Weekday[]>([]);
+  const [selectedDayC, setSelectedDayC] = useState<Weekday | "">("");
   const [daysError, setDaysError] = useState<string | null>(null);
 
   const canContinue = useMemo(() => {
@@ -87,7 +89,8 @@ export default function StudentRegister() {
     );
   }, [form.matricNumber, form.fullName, form.gender]);
 
-  const canSelectT = selectedDays.length === 1;
+  const canSelectT = selectedDaysT.length === 2;
+  const canSelectC = selectedDayC !== "";
 
   // Fetch packages ONLY when we enter step 2
   useEffect(() => {
@@ -129,12 +132,18 @@ export default function StudentRegister() {
     setStep(2);
   };
 
-  function toggleDay(day: Weekday) {
+  function toggleDayT(day: Weekday) {
     setDaysError(null);
-    setSelectedDays((prev) => {
-      if (prev.includes(day)) return [];
-      return [day];
+    setSelectedDaysT((prev) => {
+      if (prev.includes(day)) return prev.filter((d) => d !== day);
+      if (prev.length >= 2) return prev;
+      return [...prev, day];
     });
+  }
+
+  function toggleDayC(day: Weekday) {
+    setDaysError(null);
+    setSelectedDayC((prev) => (prev === day ? "" : day));
   }
 
   // Step 2 select: call identify with selected package
@@ -142,8 +151,12 @@ export default function StudentRegister() {
     setError(null);
     setDaysError(null);
 
-    if (pkg.code === "T" && selectedDays.length !== 1) {
-      setDaysError("Please select exactly one additional day (Tuesday, Wednesday, or Thursday).");
+    if (pkg.code === "T" && selectedDaysT.length !== 2) {
+      setDaysError("Please select exactly 2 days from Monday to Thursday.");
+      return;
+    }
+    if (pkg.code === "C" && !selectedDayC) {
+      setDaysError("Please select 1 additional day for Corporate & Owambe.");
       return;
     }
 
@@ -160,7 +173,8 @@ export default function StudentRegister() {
           gender: form.gender,
           email: form.email?.trim() || undefined,
           packageCode: pkg.code,
-          ...(pkg.code === "T" ? { selectedDays } : {}),
+          ...(pkg.code === "T" ? { selectedDays: selectedDaysT } : {}),
+          ...(pkg.code === "C" ? { selectedDays: [selectedDayC] } : {}),
         }),
       });
 
@@ -387,70 +401,93 @@ export default function StudentRegister() {
                   )}
                 </div>
 
-                {/* Day picker — Corporate Plus (T) only */}
-                <div className="mb-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                {/* Day pickers */}
+                <div className="mb-5 flex flex-col gap-4">
+                  {/* Corporate Plus (T) — pick 2 from Mon–Thu */}
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-black text-slate-900">
+                          Corporate Plus — Choose 2 Days
+                        </p>
+                        <p className="text-xs font-medium text-slate-500">
+                          Pick any <span className="font-black">2 days</span>{" "}
+                          from Mon – Thu. Friday is not included.
+                        </p>
+                      </div>
+                      <div className="text-xs font-bold text-slate-600">
+                        {selectedDaysT.length}/2
+                      </div>
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      {MON_THU_DAYS.map((d) => {
+                        const active = selectedDaysT.includes(d.value);
+                        return (
+                          <button
+                            key={d.value}
+                            type="button"
+                            onClick={() => toggleDayT(d.value)}
+                            className={[
+                              "rounded-xl px-3 py-2 text-xs font-black uppercase transition",
+                              active
+                                ? "bg-[#1B5E20] text-white"
+                                : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100",
+                            ].join(" ")}
+                          >
+                            {d.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Corporate & Owambe (C) — Friday fixed + pick 1 from Mon–Thu */}
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                     <div>
                       <p className="text-sm font-black text-slate-900">
-                        Select One Additional Day
+                        Corporate & Owambe — Choose 1 Additional Day
                       </p>
                       <p className="text-xs font-medium text-slate-500">
-                        Required for{" "}
-                        <span className="font-black">Corporate Plus</span>.
-                        Monday is always included.
+                        Friday is always included. Pick{" "}
+                        <span className="font-black">1 more day</span> from Mon
+                        – Thu.
                       </p>
                     </div>
-
-                    <div className="mt-2 text-xs font-bold text-slate-600 sm:mt-0">
-                      {selectedDays.length}/1 selected
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <span className="cursor-not-allowed rounded-xl bg-[#8B0000] px-3 py-2 text-xs font-black uppercase text-white opacity-70">
+                        Friday (Always Included)
+                      </span>
+                      <span className="text-xs font-bold text-slate-400">
+                        + pick one:
+                      </span>
                     </div>
-                  </div>
-
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <span className="cursor-not-allowed rounded-xl bg-[#1B5E20] px-3 py-2 text-xs font-black uppercase text-white opacity-60">
-                      Monday (Corporate Day)
-                    </span>
-                    <span className="text-xs font-bold text-slate-400">
-                      + pick one:
-                    </span>
-                  </div>
-
-                  <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                    {PICKER_DAYS.map((d) => {
-                      const active = selectedDays.includes(d.value);
-                      return (
-                        <button
-                          key={d.value}
-                          type="button"
-                          onClick={() => toggleDay(d.value)}
-                          className={[
-                            "rounded-xl px-3 py-2 text-xs font-black uppercase transition",
-                            active
-                              ? "bg-[#1B5E20] text-white"
-                              : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100",
-                          ].join(" ")}
-                        >
-                          {d.label}
-                        </button>
-                      );
-                    })}
+                    <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      {MON_THU_DAYS.map((d) => {
+                        const active = selectedDayC === d.value;
+                        return (
+                          <button
+                            key={d.value}
+                            type="button"
+                            onClick={() => toggleDayC(d.value)}
+                            className={[
+                              "rounded-xl px-3 py-2 text-xs font-black uppercase transition",
+                              active
+                                ? "bg-[#1B5E20] text-white"
+                                : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100",
+                            ].join(" ")}
+                          >
+                            {d.label}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
 
                   {daysError && (
-                    <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-bold text-red-700">
+                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-bold text-red-700">
                       {daysError}
                     </div>
                   )}
-
-                  <div className="mt-3 text-[11px] font-bold text-slate-500">
-                    Selected:{" "}
-                    <span className="text-slate-700">
-                      Monday
-                      {selectedDays.length
-                        ? `, ${selectedDays[0]}`
-                        : " (+ one more required for Corporate Plus)"}
-                    </span>
-                  </div>
                 </div>
 
                 {loadingPackages ? (
@@ -472,7 +509,10 @@ export default function StudentRegister() {
                         isPreSelected={p.code === preSelectedCode}
                         loading={submittingPackage === p._id}
                         onSelect={() => handleSelectPackage(p)}
-                        disabled={p.code === "T" && !canSelectT}
+                        disabled={
+                          (p.code === "T" && !canSelectT) ||
+                          (p.code === "C" && !canSelectC)
+                        }
                       />
                     ))}
                   </div>
@@ -576,8 +616,10 @@ function PackageCard(props: {
         className="w-full rounded-lg bg-emerald-50 py-2 text-sm font-bold text-[#2D6A4F] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
         title={
           pkg.code === "T" && disabled
-            ? "Select one additional day before choosing Corporate Plus"
-            : undefined
+            ? "Select 2 days (Mon–Thu) before choosing Corporate Plus"
+            : pkg.code === "C" && disabled
+              ? "Select 1 additional day before choosing Corporate & Owambe"
+              : undefined
         }
       >
         {loading ? "Saving..." : isPreSelected ? "Confirm Selection" : "Select Package"}
@@ -586,7 +628,14 @@ function PackageCard(props: {
       {pkg.code === "T" && disabled && (
         <p className="mt-2 text-[11px] font-bold text-slate-500">
           Select exactly{" "}
-          <span className="text-slate-700">one additional day</span> to enable
+          <span className="text-slate-700">2 days from Mon – Thu</span> to
+          enable this package.
+        </p>
+      )}
+      {pkg.code === "C" && disabled && (
+        <p className="mt-2 text-[11px] font-bold text-slate-500">
+          Select{" "}
+          <span className="text-slate-700">1 additional day</span> to enable
           this package.
         </p>
       )}

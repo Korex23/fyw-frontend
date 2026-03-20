@@ -102,10 +102,10 @@ function getDays(packageType: PackageType | string): DayConfig[] {
     if (packageType === "FULL") {
       state = "fixed";
     } else if (packageType === "CORPORATE_OWAMBE") {
-      if (key === "MON" || key === "FRI") state = "fixed";
-    } else if (packageType === "CORPORATE_PLUS") {
-      if (key === "MON") state = "fixed";
+      if (key === "FRI") state = "fixed";
       else if (key !== "FRI") state = "choice";
+    } else if (packageType === "CORPORATE_PLUS") {
+      if (key !== "FRI") state = "choice";
     }
     return { short, theme, state };
   });
@@ -524,11 +524,11 @@ function PackageCard({ pkg, featured }: { pkg: Pkg; featured?: boolean }) {
             ))}
           </div>
           <p className="mt-1.5 text-[10px] font-bold text-slate-400">
-            {choiceCount > 0
-              ? "Monday always included · pick 1 of Tue / Wed / Thu"
-              : fixedCount === 5
-                ? "All 5 days included"
-                : "Both days fixed — no selection needed"}
+            {pkg.code === "F"
+              ? "All 5 days included"
+              : pkg.code === "C"
+                ? "Friday always included · pick 1 more day from Mon – Thu"
+                : "Pick any 2 days from Mon – Thu · no Friday"}
           </p>
         </div>
 

@@ -39,10 +39,16 @@ const FRIENDLY_MESSAGES: Record<string, string> = {
     "Downgrade is not available once payment is complete.",
   "Can only downgrade to a lower-priced package. Upgrades are not allowed here.":
     "You can only downgrade to a lower-priced package.",
-  "Corporate Plus package requires exactly 1 additional day (Tuesday, Wednesday, or Thursday)":
-    "Corporate Plus requires exactly one additional day — Tuesday, Wednesday, or Thursday.",
-  "Corporate Plus package: additional day must be Tuesday, Wednesday, or Thursday":
-    "The chosen day must be Tuesday, Wednesday, or Thursday.",
+  "Corporate Plus package does not include Friday. Please select 2 days from Monday to Thursday":
+    "Corporate Plus doesn't include Friday. Please pick 2 days from Monday to Thursday.",
+  "Corporate Plus package requires exactly 2 days (any days except Friday)":
+    "Corporate Plus requires exactly 2 days — any from Monday to Thursday.",
+  "Corporate Plus package: days must be Monday, Tuesday, Wednesday, or Thursday":
+    "Corporate Plus days must be Monday, Tuesday, Wednesday, or Thursday.",
+  "Corporate & Owambe package requires exactly 1 additional day (Monday, Tuesday, Wednesday, or Thursday)":
+    "Corporate & Owambe requires exactly 1 additional day — Monday, Tuesday, Wednesday, or Thursday.",
+  "Corporate & Owambe package: additional day must be Monday, Tuesday, Wednesday, or Thursday":
+    "The chosen day must be Monday, Tuesday, Wednesday, or Thursday.",
   "Selected days contain invalid day values":
     "One or more selected days are invalid.",
   "Internal server error": "Something went wrong on our end. Please try again.",
