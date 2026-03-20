@@ -111,7 +111,7 @@ const SCHEDULE = [
 const FAQS = [
   {
     q: "What days does each package include?",
-    a: "Corporate Plus (₦30,000) lets you pick any 2 days from Monday to Thursday — no Friday. Corporate & Owambe (₦40,000) includes Friday as a fixed day, plus 1 more day of your choice from Monday to Thursday. Full Experience (₦60,000) covers all 5 days with no selection needed.",
+    a: "Two-Day Flex (₦30,000) lets you pick any 2 days from Monday to Thursday — no Friday. Owambe Plus (₦40,000) includes Friday as a fixed day, plus 1 more day of your choice from Monday to Thursday. Full Experience (₦60,000) covers all 5 days with no selection needed.",
   },
   {
     q: "Can I upgrade or downgrade my package?",
@@ -123,7 +123,7 @@ const FAQS = [
   },
   {
     q: "Can I change my selected days after registering?",
-    a: "Yes. If you're on Corporate Plus or Corporate & Owambe, you can update your chosen day(s) through your student dashboard before the event begins.",
+    a: "Yes. If you're on Two-Day Flex or Owambe Plus, you can update your chosen day(s) through your student dashboard before the event begins.",
   },
   {
     q: "What is included in the price?",
