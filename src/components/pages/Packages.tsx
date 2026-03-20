@@ -97,7 +97,12 @@ const SCHEDULE = [
     descriptionRaw: {
       intro:
         "The grand finale. A full Nigerian cultural experience. Each department pairing represents a tribe with kings and queens, cultural entrances, a grand parade, dance performances, and full energy. Then we shift into a proper Owambe:",
-      bullets: ["Good food", "Drinks", "Souvenirs", "Music, dancing and an after party"],
+      bullets: [
+        "Good food",
+        "Drinks",
+        "Souvenirs",
+        "Music, dancing and an after party",
+      ],
       note: "This is the final send-off — and we're ending it properly. (Well, almost. There's still SIGNOUT PARTY.)",
     } satisfies DayDescription,
   },
@@ -105,24 +110,28 @@ const SCHEDULE = [
 
 const FAQS = [
   {
-    q: "Can I upgrade my package later?",
-    a: "Yes — you can upgrade to a higher-priced package at any time before the event. Your previously paid amount is preserved and you only pay the difference.",
+    q: "What days does each package include?",
+    a: "Corporate Plus (₦30,000) lets you pick any 2 days from Monday to Thursday — no Friday. Corporate & Owambe (₦40,000) includes Friday as a fixed day, plus 1 more day of your choice from Monday to Thursday. Full Experience (₦60,000) covers all 5 days with no selection needed.",
+  },
+  {
+    q: "Can I upgrade or downgrade my package?",
+    a: "Yes on both. You can upgrade at any time before the event — your previously paid amount is preserved and you only pay the difference. Downgrades are also available as long as your payment is not yet complete.",
   },
   {
     q: "Do I have to pay everything at once?",
     a: "No. You can pay in instalments at your own pace. Your registration is confirmed the moment you select a package, and you can top up your balance whenever.",
   },
   {
-    q: "For Corporate Plus — can I change my extra day?",
-    a: "Yes. You can update your chosen day through your student dashboard before the event begins.",
+    q: "Can I change my selected days after registering?",
+    a: "Yes. If you're on Corporate Plus or Corporate & Owambe, you can update your chosen day(s) through your student dashboard before the event begins.",
   },
   {
     q: "What is included in the price?",
-    a: "Entry to all events on your selected days, meals, entertainment, and your official ULES FYW invite card.",
+    a: "Entry to all events on your selected days, meals, entertainment, souvenirs, and your official ULES FYW invite card.",
   },
   {
-    q: "Is this only for engineering students?",
-    a: "ULES FYW is organised by the University of Lagos Engineering Society and is open to all final year engineering students.",
+    q: "What is Item 7?",
+    a: "You'll find out on Monday. 😉",
   },
 ];
 
@@ -159,13 +168,13 @@ export default function Packages() {
   const [error, setError] = useState<string | null>(null);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  useEffect(() => {
-    const stored = localStorage.getItem("fyw_matric");
-    if (stored) {
-      router.replace(`/dashboard/${encodeURIComponent(stored)}`);
-      return;
-    }
-  }, [router]);
+  // useEffect(() => {
+  //   const stored = localStorage.getItem("fyw_matric");
+  //   if (stored) {
+  //     router.replace(`/dashboard/${encodeURIComponent(stored)}`);
+  //     return;
+  //   }
+  // }, [router]);
 
   useEffect(() => {
     if (packages.length > 0) return;
@@ -309,11 +318,18 @@ export default function Packages() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            {SCHEDULE.map((day) => (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
+            {SCHEDULE.map((day, i) => (
               <div
                 key={day.key}
-                className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur"
+                className={[
+                  "flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur",
+                  "lg:col-span-2",
+                  i === 3 ? "lg:col-start-2" : "",
+                  i === 4 ? "lg:col-start-4" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
               >
                 <div
                   className={`flex h-10 w-10 items-center justify-center rounded-xl ${day.color}`}
