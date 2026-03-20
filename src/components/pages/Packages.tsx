@@ -18,21 +18,21 @@ const SCHEDULE = [
     key: "MON",
     short: "Mon",
     day: "Monday",
-    theme: "Corporate Day & Career Fair",
+    theme: "Career & Corporate Day",
     icon: "business_center",
     color: "bg-slate-800",
     description:
-      "Kick off the week suited and booted. Corporate attire, alumni networking, industry talks, and a formal afternoon programme to launch FYW in style.",
+      "This isn't your average career talk. We're bringing in people from tech, business, fashion, media, entertainment and more — plus professional headshots, CV submission opportunities, and real conversations about life after school.",
   },
   {
     key: "TUE",
     short: "Tue",
     day: "Tuesday",
-    theme: "Retro-Themed Denim Day",
+    theme: "Denim Day — Rodeo Themed",
     icon: "style",
     color: "bg-blue-700",
     description:
-      "Pull out your best retro denim fit and turn back the clock. Themed photo ops, old-school music, and a laid-back daytime hangout with your classmates.",
+      "The Wild West is coming to campus — and it's going to be stylish. Denim on denim, cowboy hats, boots, bandanas, and a full rodeo-themed experience with creative photo setups made for content, made for memories.",
   },
   {
     key: "WED",
@@ -42,17 +42,17 @@ const SCHEDULE = [
     icon: "sports",
     color: "bg-purple-700",
     description:
-      "Rep your favourite team's jersey and compete for house glory. A full day of inter-house games, friendly rivalries, and high-energy sports action.",
+      "That inter-house energy from secondary school? We're bringing it back one last time. Your jersey colour is your team — sack race, egg race, relays, 5-a-side football, and team challenges. Party packs included.",
   },
   {
     key: "THU",
     short: "Thu",
     day: "Thursday",
-    theme: "Costume Day & Runway Show",
+    theme: "Costume Day",
     icon: "theater_comedy",
     color: "bg-orange-600",
     description:
-      "Unleash your alter ego in your most creative costume. A best-dressed competition, a full runway show, and non-stop entertainment from start to finish.",
+      "Range. We want to see it. Come as movie characters, fictional icons, or something completely unexpected. Costume runway, prizes for the most creative looks, and a party to close the day. Leave the safe choices at home.",
   },
   {
     key: "FRI",
@@ -62,7 +62,7 @@ const SCHEDULE = [
     icon: "celebration",
     color: "bg-[#8B0000]",
     description:
-      "The grand finale. Rock your finest traditional attire, enjoy live music, cultural displays, and the biggest Owambe send-off of your engineering career.",
+      "The grand finale. Each department pairing represents a tribe — Kings & Queens, cultural entrances, a grand parade, and dance performances. Then we shift into a proper Owambe: food, drinks, souvenirs, music, and an after party.",
   },
 ];
 
