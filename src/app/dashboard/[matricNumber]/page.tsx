@@ -64,8 +64,13 @@ export default function DashboardPage() {
 
   const [downgradePendingCode, setDowngradePendingCode] = useState<string | null>(null);
   const [downgradeDays, setDowngradeDays] = useState<string[]>([]);
+  const [downgradeAnchorC, setDowngradeAnchorC] = useState<string>("");
   const [downgrading, setDowngrading] = useState(false);
   const [downgradeError, setDowngradeError] = useState<string | null>(null);
+
+  const [upgradePendingCode, setUpgradePendingCode] = useState<string | null>(null);
+  const [upgradeAnchorC, setUpgradeAnchorC] = useState<string>("");
+  const [upgradeOtherDaysC, setUpgradeOtherDaysC] = useState<string[]>([]);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/students/packages`, { cache: "no-store" })
@@ -144,16 +149,18 @@ export default function DashboardPage() {
       setDowngradeError("Please select exactly 2 days from Monday to Thursday.");
       return;
     }
-    if (downgradePendingPkg?.packageType === "CORPORATE_OWAMBE" && downgradeDays.length !== 1) {
-      setDowngradeError("Please select 1 additional day from Monday to Thursday.");
+    if (downgradePendingPkg?.packageType === "CORPORATE_OWAMBE" && (!downgradeAnchorC || downgradeDays.length !== 2)) {
+      setDowngradeError("Please select your anchor day (Monday or Friday) and exactly 2 other days.");
       return;
     }
     setDowngradeError(null);
     setDowngrading(true);
     try {
       const body: Record<string, unknown> = { matricNumber, newPackageCode: downgradePendingCode };
-      if (downgradeDays.length > 0) {
+      if (downgradePendingPkg?.packageType === "CORPORATE_PLUS" && downgradeDays.length > 0) {
         body.selectedDays = downgradeDays;
+      } else if (downgradePendingPkg?.packageType === "CORPORATE_OWAMBE") {
+        body.selectedDays = [downgradeAnchorC, ...downgradeDays];
       }
       const res = await fetch(`${API_BASE}/api/students/downgrade-package`, {
         method: "POST",
@@ -173,6 +180,13 @@ export default function DashboardPage() {
   };
 
   const handleUpgrade = async (newPackageCode: string) => {
+    if (newPackageCode === "C") {
+      setUpgradeAnchorC("");
+      setUpgradeOtherDaysC([]);
+      setUpgradeError(null);
+      setUpgradePendingCode("C");
+      return;
+    }
     setUpgradeError(null);
     setUpgrading(newPackageCode);
     try {
@@ -190,6 +204,37 @@ export default function DashboardPage() {
       setUpgradeError(e?.message ?? "Upgrade failed");
     } finally {
       setUpgrading(null);
+    }
+  };
+
+  const handleUpgradeConfirm = async () => {
+    if (!upgradePendingCode) return;
+    if (!upgradeAnchorC || upgradeOtherDaysC.length !== 2) {
+      setUpgradeError("Please select your anchor day (Monday or Friday) and exactly 2 other days.");
+      return;
+    }
+    setUpgradeError(null);
+    setUpgrading(upgradePendingCode);
+    try {
+      const res = await fetch(`${API_BASE}/api/students/upgrade-package`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          matricNumber,
+          newPackageCode: upgradePendingCode,
+          selectedDays: [upgradeAnchorC, ...upgradeOtherDaysC],
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(parseApiError(res.status, body));
+      }
+      window.location.reload();
+    } catch (e: any) {
+      setUpgradeError(e?.message ?? "Upgrade failed");
+    } finally {
+      setUpgrading(null);
+      setUpgradePendingCode(null);
     }
   };
 
@@ -486,12 +531,9 @@ export default function DashboardPage() {
                     Days: All 5 Days
                   </div>
                 )}
-                {pkg.code === "C" && (
+                {pkg.code === "C" && student.selectedDays?.length > 0 && (
                   <div className="mt-4 text-sm font-medium opacity-80">
-                    Days: Friday
-                    {student.selectedDays?.filter((d) => d !== "FRIDAY").length > 0
-                      ? ` + ${student.selectedDays.filter((d) => d !== "FRIDAY").join(", ")}`
-                      : ""}
+                    Days: {student.selectedDays.join(", ")}
                   </div>
                 )}
                 {pkg.code === "T" && student.selectedDays?.length > 0 && (
@@ -519,38 +561,138 @@ export default function DashboardPage() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {upgradeOptions.map((option) => {
-                const diff = option.price - (pkg?.price ?? 0);
-                return (
-                  <div
-                    key={option._id}
-                    className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-4"
+            {upgradePendingCode === "C" ? (
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                <p className="mb-3 text-sm font-bold text-emerald-900">
+                  Upgrading to{" "}
+                  <span className="text-emerald-700">
+                    {upgradeOptions.find((o) => o.code === "C")?.name ?? "Owambe Plus"}
+                  </span>{" "}
+                  — select your 3 days
+                </p>
+
+                <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-600">
+                  Step 1 — Pick anchor day:
+                </p>
+                <div className="mb-3 grid grid-cols-2 gap-2">
+                  {(["MONDAY", "FRIDAY"] as const).map((day) => {
+                    const label = day === "MONDAY" ? "Monday (Corporate Day)" : "Friday (Owambe Day)";
+                    return (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => {
+                          setUpgradeAnchorC((prev) => (prev === day ? "" : day));
+                          setUpgradeOtherDaysC([]);
+                        }}
+                        className={`rounded-lg border px-4 py-2 text-xs font-bold capitalize transition ${
+                          upgradeAnchorC === day
+                            ? "border-[#2D6A4F] bg-[#2D6A4F] text-white"
+                            : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-600">
+                  Step 2 — Pick 2 more days ({upgradeOtherDaysC.length}/2):
+                </p>
+                <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"]
+                    .filter((d) => d !== upgradeAnchorC)
+                    .map((day) => {
+                      const label = day.charAt(0) + day.slice(1).toLowerCase();
+                      const active = upgradeOtherDaysC.includes(day);
+                      const noAnchor = !upgradeAnchorC;
+                      return (
+                        <button
+                          key={day}
+                          type="button"
+                          disabled={noAnchor}
+                          onClick={() =>
+                            setUpgradeOtherDaysC((prev) =>
+                              prev.includes(day)
+                                ? prev.filter((d) => d !== day)
+                                : prev.length < 2
+                                  ? [...prev, day]
+                                  : prev,
+                            )
+                          }
+                          className={`rounded-lg border px-4 py-2 text-xs font-bold capitalize transition ${
+                            noAnchor
+                              ? "cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300"
+                              : active
+                                ? "border-[#2D6A4F] bg-[#2D6A4F] text-white"
+                                : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={handleUpgradeConfirm}
+                    disabled={upgrading === "C"}
+                    className="rounded-lg bg-[#2D6A4F] px-5 py-2 text-sm font-bold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    <div>
-                      <p className="font-bold text-slate-900">{option.name}</p>
-                      <p className="text-sm text-slate-500">
-                        ₦{option.price.toLocaleString("en-NG")} total
-                      </p>
-                      <p className="text-xs text-slate-400">
-                        +₦{diff.toLocaleString("en-NG")} outstanding
-                        {totalPaid > 0
-                          ? ` (₦${totalPaid.toLocaleString("en-NG")} already paid)`
-                          : ""}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleUpgrade(option.code)}
-                      disabled={upgrading === option.code}
-                      className="rounded-lg bg-[#2D6A4F] px-4 py-2 text-sm font-bold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                    {upgrading === "C" ? "Upgrading..." : "Confirm Upgrade"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUpgradePendingCode(null);
+                      setUpgradeAnchorC("");
+                      setUpgradeOtherDaysC([]);
+                      setUpgradeError(null);
+                    }}
+                    disabled={upgrading === "C"}
+                    className="rounded-lg border border-slate-200 bg-white px-5 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {upgradeOptions.map((option) => {
+                  const diff = option.price - (pkg?.price ?? 0);
+                  return (
+                    <div
+                      key={option._id}
+                      className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-4"
                     >
-                      {upgrading === option.code ? "Upgrading..." : "Upgrade"}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
+                      <div>
+                        <p className="font-bold text-slate-900">{option.name}</p>
+                        <p className="text-sm text-slate-500">
+                          ₦{option.price.toLocaleString("en-NG")} total
+                        </p>
+                        <p className="text-xs text-slate-400">
+                          +₦{diff.toLocaleString("en-NG")} outstanding
+                          {totalPaid > 0
+                            ? ` (₦${totalPaid.toLocaleString("en-NG")} already paid)`
+                            : ""}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleUpgrade(option.code)}
+                        disabled={upgrading === option.code}
+                        className="rounded-lg bg-[#2D6A4F] px-4 py-2 text-sm font-bold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {upgrading === option.code ? "Upgrading..." : "Upgrade"}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
@@ -619,30 +761,69 @@ export default function DashboardPage() {
                 {downgradePendingPkg?.packageType === "CORPORATE_OWAMBE" && (
                   <div className="mb-4">
                     <p className="mb-1 text-xs font-bold uppercase tracking-wider text-slate-600">
-                      Select 1 additional day (Mon – Thu)
+                      Step 1 — Pick anchor day:
+                    </p>
+                    <div className="mb-3 grid grid-cols-2 gap-2">
+                      {(["MONDAY", "FRIDAY"] as const).map((day) => {
+                        const label = day === "MONDAY" ? "Monday (Corporate Day)" : "Friday (Owambe Day)";
+                        return (
+                          <button
+                            key={day}
+                            type="button"
+                            onClick={() => {
+                              setDowngradeAnchorC((prev) => (prev === day ? "" : day));
+                              setDowngradeDays([]);
+                            }}
+                            className={`rounded-lg border px-4 py-2 text-xs font-bold capitalize transition ${
+                              downgradeAnchorC === day
+                                ? "border-[#2D6A4F] bg-[#2D6A4F] text-white"
+                                : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="mb-1 text-xs font-bold uppercase tracking-wider text-slate-600">
+                      Step 2 — Pick 2 more days ({downgradeDays.length}/2):
                     </p>
                     <p className="mb-2 text-[11px] text-slate-500">
-                      Friday is always included
+                      {downgradeAnchorC
+                        ? `Anchor: ${downgradeAnchorC.charAt(0) + downgradeAnchorC.slice(1).toLowerCase()} — pick 2 from remaining days`
+                        : "Select anchor day first"}
                     </p>
                     <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                      {["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY"].map((day) => (
-                        <button
-                          key={day}
-                          type="button"
-                          onClick={() =>
-                            setDowngradeDays((prev) =>
-                              prev.includes(day) ? [] : [day],
-                            )
-                          }
-                          className={`rounded-lg border px-4 py-2 text-xs font-bold capitalize transition ${
-                            downgradeDays.includes(day)
-                              ? "border-[#2D6A4F] bg-[#2D6A4F] text-white"
-                              : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                          }`}
-                        >
-                          {day.charAt(0) + day.slice(1).toLowerCase()}
-                        </button>
-                      ))}
+                      {["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"]
+                        .filter((d) => d !== downgradeAnchorC)
+                        .map((day) => {
+                          const noAnchor = !downgradeAnchorC;
+                          return (
+                            <button
+                              key={day}
+                              type="button"
+                              disabled={noAnchor}
+                              onClick={() =>
+                                setDowngradeDays((prev) =>
+                                  prev.includes(day)
+                                    ? prev.filter((d) => d !== day)
+                                    : prev.length < 2
+                                      ? [...prev, day]
+                                      : prev,
+                                )
+                              }
+                              className={`rounded-lg border px-4 py-2 text-xs font-bold capitalize transition ${
+                                noAnchor
+                                  ? "cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300"
+                                  : downgradeDays.includes(day)
+                                    ? "border-[#2D6A4F] bg-[#2D6A4F] text-white"
+                                    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                              }`}
+                            >
+                              {day.charAt(0) + day.slice(1).toLowerCase()}
+                            </button>
+                          );
+                        })}
                     </div>
                   </div>
                 )}
@@ -661,6 +842,7 @@ export default function DashboardPage() {
                     onClick={() => {
                       setDowngradePendingCode(null);
                       setDowngradeDays([]);
+                      setDowngradeAnchorC("");
                       setDowngradeError(null);
                     }}
                     disabled={downgrading}

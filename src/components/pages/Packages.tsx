@@ -111,7 +111,7 @@ const SCHEDULE = [
 const FAQS = [
   {
     q: "What days does each package include?",
-    a: "Two-Day Flex (₦30,000) lets you pick any 2 days from Monday to Thursday — no Friday. Owambe Plus (₦40,000) includes Friday as a fixed day, plus 1 more day of your choice from Monday to Thursday. Full Experience (₦60,000) covers all 5 days with no selection needed.",
+    a: "Two-Day Flex (₦30,000) lets you pick any 2 days from Monday to Thursday — no Friday. Owambe Plus (₦40,000) lets you choose Monday or Friday as your anchor day, plus any 2 other days — 3 days total. Full Experience (₦60,000) covers all 5 days with no selection needed.",
   },
   {
     q: "Can I upgrade or downgrade my package?",
@@ -148,8 +148,7 @@ function getDays(packageType: PackageType | string): DayConfig[] {
     if (packageType === "FULL") {
       state = "fixed";
     } else if (packageType === "CORPORATE_OWAMBE") {
-      if (key === "FRI") state = "fixed";
-      else if (key !== "FRI") state = "choice";
+      state = "choice"; // anchor (Mon or Fri) + any 2 others — all days selectable
     } else if (packageType === "CORPORATE_PLUS") {
       if (key !== "FRI") state = "choice";
     }
@@ -590,7 +589,7 @@ function PackageCard({ pkg, featured }: { pkg: Pkg; featured?: boolean }) {
             {pkg.code === "F"
               ? "All 5 days included"
               : pkg.code === "C"
-                ? "Friday always included · pick 1 more day from Mon – Thu"
+                ? "Pick Monday or Friday as anchor · plus any 2 other days"
                 : "Pick any 2 days from Mon – Thu · no Friday"}
           </p>
         </div>

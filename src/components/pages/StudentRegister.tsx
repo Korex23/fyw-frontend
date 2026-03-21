@@ -78,7 +78,8 @@ export default function StudentRegister() {
 
   // Day selection state
   const [selectedDaysT, setSelectedDaysT] = useState<Weekday[]>([]);
-  const [selectedDayC, setSelectedDayC] = useState<Weekday | "">("");
+  const [selectedAnchorC, setSelectedAnchorC] = useState<"MONDAY" | "FRIDAY" | "">("");
+  const [selectedOtherDaysC, setSelectedOtherDaysC] = useState<Weekday[]>([]);
   const [daysError, setDaysError] = useState<string | null>(null);
 
   const canContinue = useMemo(() => {
@@ -90,7 +91,7 @@ export default function StudentRegister() {
   }, [form.matricNumber, form.fullName, form.gender]);
 
   const canSelectT = selectedDaysT.length === 2;
-  const canSelectC = selectedDayC !== "";
+  const canSelectC = selectedAnchorC !== "" && selectedOtherDaysC.length === 2;
 
   // Fetch packages ONLY when we enter step 2
   useEffect(() => {
@@ -141,9 +142,19 @@ export default function StudentRegister() {
     });
   }
 
-  function toggleDayC(day: Weekday) {
+  function setAnchorC(day: "MONDAY" | "FRIDAY") {
     setDaysError(null);
-    setSelectedDayC((prev) => (prev === day ? "" : day));
+    setSelectedAnchorC((prev) => (prev === day ? "" : day));
+    setSelectedOtherDaysC([]); // reset other days whenever anchor changes
+  }
+
+  function toggleOtherDayC(day: Weekday) {
+    setDaysError(null);
+    setSelectedOtherDaysC((prev) => {
+      if (prev.includes(day)) return prev.filter((d) => d !== day);
+      if (prev.length >= 2) return prev;
+      return [...prev, day];
+    });
   }
 
   // Step 2 select: call identify with selected package
@@ -155,8 +166,8 @@ export default function StudentRegister() {
       setDaysError("Please select exactly 2 days from Monday to Thursday.");
       return;
     }
-    if (pkg.code === "C" && !selectedDayC) {
-      setDaysError("Please select 1 additional day for Corporate & Owambe.");
+    if (pkg.code === "C" && (!selectedAnchorC || selectedOtherDaysC.length !== 2)) {
+      setDaysError("Please select your anchor day (Monday or Friday) and exactly 2 other days.");
       return;
     }
 
@@ -174,7 +185,7 @@ export default function StudentRegister() {
           email: form.email?.trim() || undefined,
           packageCode: pkg.code,
           ...(pkg.code === "T" ? { selectedDays: selectedDaysT } : {}),
-          ...(pkg.code === "C" ? { selectedDays: [selectedDayC] } : {}),
+          ...(pkg.code === "C" ? { selectedDays: [selectedAnchorC, ...selectedOtherDaysC] } : {}),
         }),
       });
 
@@ -441,34 +452,41 @@ export default function StudentRegister() {
                     </div>
                   </div>
 
-                  {/* Corporate & Owambe (C) — Friday fixed + pick 1 from Mon–Thu */}
+                  {/* Owambe Plus (C) — anchor (Mon or Fri) + pick 2 more */}
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <div>
-                      <p className="text-sm font-black text-slate-900">
-                        Corporate & Owambe — Choose 1 Additional Day
-                      </p>
-                      <p className="text-xs font-medium text-slate-500">
-                        Friday is always included. Pick{" "}
-                        <span className="font-black">1 more day</span> from Mon
-                        – Thu.
-                      </p>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-black text-slate-900">
+                          Owambe Plus — Choose Your 3 Days
+                        </p>
+                        <p className="text-xs font-medium text-slate-500">
+                          Pick an{" "}
+                          <span className="font-black">anchor day</span>{" "}
+                          (Monday or Friday), then{" "}
+                          <span className="font-black">2 more days</span>.
+                        </p>
+                      </div>
+                      <div className="text-xs font-bold text-slate-600">
+                        {(selectedAnchorC ? 1 : 0) + selectedOtherDaysC.length}/3
+                      </div>
                     </div>
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                      <span className="cursor-not-allowed rounded-xl bg-[#8B0000] px-3 py-2 text-xs font-black uppercase text-white opacity-70">
-                        Friday (Always Included)
-                      </span>
-                      <span className="text-xs font-bold text-slate-400">
-                        + pick one:
-                      </span>
-                    </div>
-                    <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                      {MON_THU_DAYS.map((d) => {
-                        const active = selectedDayC === d.value;
+
+                    <p className="mt-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                      Step 1 — Pick anchor day:
+                    </p>
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      {(
+                        [
+                          { value: "MONDAY", label: "Monday (Corporate Day)" },
+                          { value: "FRIDAY", label: "Friday (Owambe Day)" },
+                        ] as { value: "MONDAY" | "FRIDAY"; label: string }[]
+                      ).map((d) => {
+                        const active = selectedAnchorC === d.value;
                         return (
                           <button
                             key={d.value}
                             type="button"
-                            onClick={() => toggleDayC(d.value)}
+                            onClick={() => setAnchorC(d.value)}
                             className={[
                               "rounded-xl px-3 py-2 text-xs font-black uppercase transition",
                               active
@@ -480,6 +498,44 @@ export default function StudentRegister() {
                           </button>
                         );
                       })}
+                    </div>
+
+                    <p className="mt-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                      Step 2 — Pick 2 more days ({selectedOtherDaysC.length}/2):
+                    </p>
+                    <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      {(
+                        [
+                          { value: "MONDAY", label: "Monday" },
+                          { value: "TUESDAY", label: "Tuesday" },
+                          { value: "WEDNESDAY", label: "Wednesday" },
+                          { value: "THURSDAY", label: "Thursday" },
+                          { value: "FRIDAY", label: "Friday" },
+                        ] as { value: Weekday; label: string }[]
+                      )
+                        .filter((d) => d.value !== selectedAnchorC)
+                        .map((d) => {
+                          const active = selectedOtherDaysC.includes(d.value);
+                          const noAnchor = !selectedAnchorC;
+                          return (
+                            <button
+                              key={d.value}
+                              type="button"
+                              onClick={() => !noAnchor && toggleOtherDayC(d.value)}
+                              disabled={noAnchor}
+                              className={[
+                                "rounded-xl px-3 py-2 text-xs font-black uppercase transition",
+                                noAnchor
+                                  ? "bg-slate-100 text-slate-300 cursor-not-allowed"
+                                  : active
+                                    ? "bg-[#1B5E20] text-white"
+                                    : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100",
+                              ].join(" ")}
+                            >
+                              {d.label}
+                            </button>
+                          );
+                        })}
                     </div>
                   </div>
 
@@ -618,7 +674,7 @@ function PackageCard(props: {
           pkg.code === "T" && disabled
             ? "Select 2 days (Mon–Thu) before choosing Corporate Plus"
             : pkg.code === "C" && disabled
-              ? "Select 1 additional day before choosing Corporate & Owambe"
+              ? "Select anchor day + 2 more days for Owambe Plus"
               : undefined
         }
       >
@@ -635,8 +691,8 @@ function PackageCard(props: {
       {pkg.code === "C" && disabled && (
         <p className="mt-2 text-[11px] font-bold text-slate-500">
           Select{" "}
-          <span className="text-slate-700">1 additional day</span> to enable
-          this package.
+          <span className="text-slate-700">anchor day + 2 more days</span> to
+          enable this package.
         </p>
       )}
     </div>
