@@ -66,7 +66,7 @@ export default function AdminLoginPage() {
       localStorage.setItem("admin_token", json.data.token);
       localStorage.setItem("admin_email", json.data.admin.email);
 
-      router.push("/admin/students"); // or /admin/dashboard
+      router.push("/admin/dashboard");
     } catch (err: any) {
       setError(err?.message ?? "Login failed");
     } finally {

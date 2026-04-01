@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const API_BASE = "https://fyw-api.atlascard.xyz";
 
 type PaymentStatus = "NOT_PAID" | "PARTIALLY_PAID" | "FULLY_PAID";
-type PackageCode = "A" | "B" | "C" | "D";
+type PackageCode = "T" | "C" | "F";
 
 type PackageDoc = {
   _id: string;
@@ -80,10 +81,9 @@ function packagePill(code?: string, name?: string) {
     );
 
   const map: Record<string, string> = {
-    A: "border-slate-200 bg-slate-50 text-slate-700",
-    B: "border-blue-100 bg-blue-50 text-blue-700",
+    T: "border-slate-200 bg-slate-50 text-slate-700",
     C: "border-purple-100 bg-purple-50 text-purple-700",
-    D: "border-purple-100 bg-purple-50 text-purple-700",
+    F: "border-emerald-100 bg-emerald-50 text-emerald-700",
   };
 
   return (
@@ -97,52 +97,9 @@ function packagePill(code?: string, name?: string) {
   );
 }
 
-function downloadTextFile(filename: string, text: string) {
-  const blob = new Blob([text], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-function toCSV(rows: StudentRow[]) {
-  const header = [
-    "matricNumber",
-    "fullName",
-    "packageCode",
-    "packageName",
-    "paymentStatus",
-    "totalPaid",
-    "outstanding",
-  ];
-
-  const escape = (v: string) => {
-    const s = String(v ?? "");
-    if (s.includes(",") || s.includes('"') || s.includes("\n")) {
-      return `"${s.replaceAll('"', '""')}"`;
-    }
-    return s;
-  };
-
-  const lines = rows.map((r) => [
-    r.matricNumber,
-    r.fullName,
-    r.package?.code ?? "",
-    r.package?.name ?? "",
-    r.paymentStatus,
-    String(r.totalPaid ?? 0),
-    String(r.outstanding ?? 0),
-  ]);
-
-  return [
-    header.map(escape).join(","),
-    ...lines.map((l) => l.map(escape).join(",")),
-  ].join("\n");
-}
 
 export default function AdminStudentsPage() {
+  const router = useRouter();
   const [token, setToken] = useState<string>("");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<"ALL" | PaymentStatus>("ALL");
@@ -177,8 +134,12 @@ export default function AdminStudentsPage() {
 
   useEffect(() => {
     const t = localStorage.getItem("admin_token");
-    if (t) setToken(t);
-  }, []);
+    if (!t) {
+      router.push("/admin/auth");
+      return;
+    }
+    setToken(t);
+  }, [router]);
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -241,31 +202,25 @@ export default function AdminStudentsPage() {
   const showingTo = Math.min(total, page * limit);
 
   const onExportCSV = async () => {
+    if (!token) return;
     try {
       setExporting(true);
-      const csv = toCSV(items);
-      downloadTextFile(`students-${Date.now()}.csv`, csv);
+      const res = await fetch(`${API_BASE}/api/admin/export.csv`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "students-export.csv";
+      a.click();
+      URL.revokeObjectURL(url);
     } finally {
       setExporting(false);
     }
   };
 
-  if (!token) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F9FAFB] font-sans text-slate-800">
-        <p className="text-sm text-slate-500">
-          Unauthorized. Please{" "}
-          <Link
-            href="/admin/auth"
-            className="text-emerald-900 font-bold hover:underline"
-          >
-            login
-          </Link>{" "}
-          to access the admin portal.
-        </p>
-      </div>
-    );
-  }
+  if (!token) return null;
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 antialiased">
@@ -333,10 +288,9 @@ export default function AdminStudentsPage() {
                   className="h-11 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
                 >
                   <option value="ALL">Package: All</option>
-                  <option value="A">Package A</option>
-                  <option value="B">Package B</option>
-                  <option value="C">Package C</option>
-                  <option value="D">Package D</option>
+                  <option value="T">Two-Day Flex</option>
+                  <option value="C">Owambe Plus</option>
+                  <option value="F">Full Experience</option>
                 </select>
 
                 <button
