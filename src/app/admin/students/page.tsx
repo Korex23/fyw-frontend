@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-const API_BASE = "https://fyw-api.atlascard.xyz";
+const API_BASE = "https://fyw-api.blessedbid.com";
 
 type PaymentStatus = "NOT_PAID" | "PARTIALLY_PAID" | "FULLY_PAID";
 type PackageCode = "T" | "C" | "F";

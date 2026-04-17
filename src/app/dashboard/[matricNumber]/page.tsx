@@ -6,7 +6,7 @@ import { Header } from "@/components/common/Navbar";
 import { formatNaira, parseApiError } from "@/utils/helpers";
 import { useParams, useRouter } from "next/navigation";
 
-const API_BASE = "https://fyw-api.atlascard.xyz";
+const API_BASE = "https://fyw-api.blessedbid.com";
 
 type ApiPackage = {
   _id: string;

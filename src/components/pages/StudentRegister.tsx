@@ -36,7 +36,7 @@ const MON_THU_DAYS: { label: string; value: Weekday }[] = [
   { label: "Thursday", value: "THURSDAY" },
 ];
 
-const API_BASE = "https://fyw-api.atlascard.xyz";
+const API_BASE = "https://fyw-api.blessedbid.com";
 
 const PACKAGE_LABELS: Record<string, string> = {
   T: "Corporate Plus — ₦30,000",

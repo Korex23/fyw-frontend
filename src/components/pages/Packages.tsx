@@ -7,7 +7,7 @@ import { Header } from "../common/Navbar";
 import type { Pkg, PackageType } from "@/types";
 import { parseApiError } from "@/utils/helpers";
 
-const API_BASE = "https://fyw-api.atlascard.xyz";
+const API_BASE = "https://fyw-api.blessedbid.com";
 
 // ---------------------------------------------------------------------------
 // Static content

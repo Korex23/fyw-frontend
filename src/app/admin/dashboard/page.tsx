@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-const API_BASE = "https://fyw-api.atlascard.xyz";
+const API_BASE = "https://fyw-api.blessedbid.com";
 
 type Metrics = {
   totalStudents: number;

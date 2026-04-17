@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 
-const API_BASE = "https://fyw-api.atlascard.xyz";
+const API_BASE = "https://fyw-api.blessedbid.com";
 
 /* ─── Types ──────────────────────────────────────────────────────────────────── */
 

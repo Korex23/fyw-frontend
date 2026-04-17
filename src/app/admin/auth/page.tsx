@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Header } from "@/components/common/Navbar";
 import { Field } from "@/components/common/Input";
 
-const API_BASE = "https://fyw-api.atlascard.xyz";
+const API_BASE = "https://fyw-api.blessedbid.com";
 
 type LoginPayload = {
   email: string;

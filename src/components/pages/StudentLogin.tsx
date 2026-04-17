@@ -7,7 +7,7 @@ import { Header } from "../common/Navbar";
 import { Field } from "../common/Input";
 import { parseApiError } from "@/utils/helpers";
 
-const API_BASE = "https://fyw-api.atlascard.xyz";
+const API_BASE = "https://fyw-api.blessedbid.com";
 
 export default function StudentLogin() {
   const router = useRouter();
