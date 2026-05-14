@@ -353,7 +353,7 @@ export default function DashboardPage() {
                       {formatNaira(totalPaid)}
                     </span>
                     <span className="font-medium text-slate-500">
-                      paid of {formatNaira(pkg.price)} total
+                      paid of {formatNaira(outstanding === 0 ? totalPaid : pkg.price)} total
                     </span>
                   </div>
                 </div>
