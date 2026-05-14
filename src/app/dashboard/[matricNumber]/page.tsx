@@ -124,10 +124,11 @@ export default function DashboardPage() {
   const totalPaid = student?.totalPaid ?? 0;
 
   const progressPct = useMemo(() => {
+    if (outstanding === 0) return 100;
     if (!pkg?.price) return 0;
     const pct = (totalPaid / pkg.price) * 100;
     return Math.max(0, Math.min(100, Math.round(pct)));
-  }, [pkg?.price, totalPaid]);
+  }, [pkg?.price, totalPaid, outstanding]);
 
   const canPay = outstanding > 0 && amount > 0 && amount <= outstanding;
 
