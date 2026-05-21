@@ -57,6 +57,7 @@ export default function DashboardPage() {
   const [outstanding, setOutstanding] = useState<number>(0);
 
   const [amount, setAmount] = useState<number>(0);
+  const [showPayDisclaimer, setShowPayDisclaimer] = useState(false);
 
   const [allPackages, setAllPackages] = useState<ApiPackage[]>([]);
   const [upgrading, setUpgrading] = useState<string | null>(null);
@@ -239,10 +240,14 @@ export default function DashboardPage() {
     }
   };
 
-  const onPayNow = async (e: React.FormEvent) => {
+  const onPayNow = (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!canPay) return;
+    setShowPayDisclaimer(true);
+  };
+
+  const proceedToPayment = async () => {
+    setShowPayDisclaimer(false);
     const response = await fetch(`${API_BASE}/api/payments/initialize`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -303,6 +308,39 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen w-full bg-[#F3F4F6] text-slate-900">
+      {showPayDisclaimer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
+                <span className="material-symbols-outlined">info</span>
+              </div>
+              <h2 className="text-lg font-black text-slate-900">Before You Pay</h2>
+            </div>
+            <p className="text-sm font-medium leading-relaxed text-slate-600">
+              When you are redirected to the payment page, the account name you will see is{" "}
+              <span className="font-black text-slate-900">Cambiar Technologies</span>. This is correct — please do not be alarmed if it does not display &quot;ULES Final Year Week&quot;. Cambiar Technologies is the registered business name for this payment.
+            </p>
+            <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setShowPayDisclaimer(false)}
+                className="rounded-lg border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={proceedToPayment}
+                className="rounded-lg bg-[#2D6A4F] px-5 py-2.5 text-sm font-bold text-white transition hover:brightness-110"
+              >
+                I understand — Proceed to Pay
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Header />
 
       <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-8 px-4 py-8 sm:px-6 sm:py-10">
