@@ -55,6 +55,17 @@ type DetailData = {
 
 type Toast = { id: number; message: string; type: "success" | "error" } | null;
 
+type EditForm = {
+  fullName: string;
+  email: string;
+  phone: string;
+  gender: string;
+  department: string;
+  matricNumber: string;
+};
+
+const MATRIC_REGEX = /^(1904|2104)\d{5}$/;
+
 /* ─── Helpers ────────────────────────────────────────────────────────────────── */
 
 function formatNaira(n: number) {
@@ -124,6 +135,18 @@ export default function AdminStudentDetailPage() {
   const [resending, setResending] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const [toast, setToast] = useState<Toast>(null);
+
+  const [showEdit, setShowEdit] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<EditForm>({
+    fullName: "",
+    email: "",
+    phone: "",
+    gender: "",
+    department: "",
+    matricNumber: "",
+  });
 
   // Auth guard
   useEffect(() => {
@@ -247,10 +270,202 @@ export default function AdminStudentDetailPage() {
     }
   };
 
+  const openEdit = () => {
+    if (!data) return;
+    const s = data.student;
+    setEditForm({
+      fullName: s.fullName ?? "",
+      email: s.email ?? "",
+      phone: s.phone ?? "",
+      gender: (s.gender ?? "").toLowerCase(),
+      department: s.department ?? "",
+      matricNumber: s.matricNumber ?? "",
+    });
+    setEditError(null);
+    setShowEdit(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!token || !data || saving) return;
+
+    const s = data.student;
+    // Send only changed, non-empty fields.
+    const body: Record<string, string> = {};
+    const trimmed: EditForm = {
+      fullName: editForm.fullName.trim(),
+      email: editForm.email.trim(),
+      phone: editForm.phone.trim(),
+      gender: editForm.gender.trim().toLowerCase(),
+      department: editForm.department.trim(),
+      matricNumber: editForm.matricNumber.trim(),
+    };
+
+    if (trimmed.fullName && trimmed.fullName !== s.fullName)
+      body.fullName = trimmed.fullName;
+    if (trimmed.email !== (s.email ?? "")) body.email = trimmed.email;
+    if (trimmed.phone !== (s.phone ?? "")) body.phone = trimmed.phone;
+    if (trimmed.gender && trimmed.gender !== (s.gender ?? "").toLowerCase())
+      body.gender = trimmed.gender;
+    if (trimmed.department !== (s.department ?? ""))
+      body.department = trimmed.department;
+    if (trimmed.matricNumber && trimmed.matricNumber !== s.matricNumber)
+      body.matricNumber = trimmed.matricNumber;
+
+    if (Object.keys(body).length === 0) {
+      setEditError("No changes to save.");
+      return;
+    }
+    if (body.matricNumber && !MATRIC_REGEX.test(body.matricNumber)) {
+      setEditError("Matric number must match 1904XXXXX or 2104XXXXX.");
+      return;
+    }
+
+    setSaving(true);
+    setEditError(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/students/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (res.status === 401) {
+        localStorage.removeItem("admin_token");
+        localStorage.removeItem("admin_email");
+        router.push("/admin/auth");
+        return;
+      }
+
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.success) {
+        throw new Error(json?.message || `Failed to update student (${res.status})`);
+      }
+
+      const updated = json.data?.student as StudentDoc | undefined;
+      if (updated) {
+        setData((prev) => (prev ? { ...prev, student: updated } : prev));
+      }
+      setShowEdit(false);
+      showToast("Student details updated", "success");
+    } catch (e: any) {
+      setEditError(e?.message ?? "Failed to update student");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (token === null) return null;
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 antialiased">
+      {showEdit && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-8">
+          <div className="max-h-full w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-black text-slate-900">Edit Student</h2>
+              <button
+                type="button"
+                onClick={() => setShowEdit(false)}
+                disabled={saving}
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 disabled:opacity-50"
+                aria-label="Close edit form"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+
+            {editError && (
+              <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                {editError}
+              </div>
+            )}
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSaveEdit();
+              }}
+              className="space-y-4"
+            >
+              <EditField
+                label="Full Name"
+                value={editForm.fullName}
+                onChange={(v) => setEditForm((p) => ({ ...p, fullName: v }))}
+              />
+              <EditField
+                label="Matric Number"
+                value={editForm.matricNumber}
+                onChange={(v) => setEditForm((p) => ({ ...p, matricNumber: v }))}
+                mono
+                placeholder="1904XXXXX or 2104XXXXX"
+              />
+              <EditField
+                label="Email"
+                type="email"
+                value={editForm.email}
+                onChange={(v) => setEditForm((p) => ({ ...p, email: v }))}
+              />
+              <EditField
+                label="Phone"
+                value={editForm.phone}
+                onChange={(v) => setEditForm((p) => ({ ...p, phone: v }))}
+              />
+              <div>
+                <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Gender
+                </label>
+                <select
+                  value={editForm.gender}
+                  onChange={(e) =>
+                    setEditForm((p) => ({ ...p, gender: e.target.value }))
+                  }
+                  className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 outline-none focus:border-emerald-700 focus:ring-2 focus:ring-emerald-700/20"
+                >
+                  <option value="">Not specified</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
+              </div>
+              <EditField
+                label="Department"
+                value={editForm.department}
+                onChange={(v) => setEditForm((p) => ({ ...p, department: v }))}
+              />
+
+              <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowEdit(false)}
+                  disabled={saving}
+                  className="rounded-lg border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-900 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-950 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {saving ? (
+                    <>
+                      <span className="material-symbols-outlined animate-spin text-[18px]">
+                        progress_activity
+                      </span>
+                      Saving...
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <AdminHeader />
 
       <main className="px-4 py-8 md:px-10 lg:px-24">
@@ -295,15 +510,25 @@ export default function AdminStudentDetailPage() {
                     {data.student.matricNumber}
                   </p>
                 </div>
-                <span
-                  className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ${
-                    STATUS_CONFIG[data.student.paymentStatus]?.cls ??
-                    "bg-slate-50 text-slate-700"
-                  }`}
-                >
-                  {STATUS_CONFIG[data.student.paymentStatus]?.label ??
-                    data.student.paymentStatus}
-                </span>
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ${
+                      STATUS_CONFIG[data.student.paymentStatus]?.cls ??
+                      "bg-slate-50 text-slate-700"
+                    }`}
+                  >
+                    {STATUS_CONFIG[data.student.paymentStatus]?.label ??
+                      data.student.paymentStatus}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={openEdit}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">edit</span>
+                    Edit
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -688,6 +913,34 @@ function InfoRow(props: {
       >
         {props.value}
       </dd>
+    </div>
+  );
+}
+
+/* ─── Edit Field ─────────────────────────────────────────────────────────────── */
+
+function EditField(props: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+  mono?: boolean;
+  placeholder?: string;
+}) {
+  return (
+    <div>
+      <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">
+        {props.label}
+      </label>
+      <input
+        type={props.type ?? "text"}
+        value={props.value}
+        placeholder={props.placeholder}
+        onChange={(e) => props.onChange(e.target.value)}
+        className={`h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 outline-none focus:border-emerald-700 focus:ring-2 focus:ring-emerald-700/20 ${
+          props.mono ? "font-mono" : ""
+        }`}
+      />
     </div>
   );
 }

@@ -80,6 +80,10 @@ export default function AdminGroupDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
   useEffect(() => {
     const t = localStorage.getItem("admin_token");
     if (!t) {
@@ -125,6 +129,43 @@ export default function AdminGroupDetailPage() {
     fetchDetail();
   }, [token, id, router]);
 
+  const handleDelete = async () => {
+    if (!token || deleting) return;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/groups/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.status === 401) {
+        localStorage.removeItem("admin_token");
+        localStorage.removeItem("admin_email");
+        router.push("/admin/auth");
+        return;
+      }
+
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.success) {
+        throw new Error(json?.message || `Failed to delete group (${res.status})`);
+      }
+
+      const message: string =
+        json?.message ?? "Group deleted along with its members and payments.";
+      // Hand the success message to the groups list to surface as a toast.
+      try {
+        sessionStorage.setItem("admin_groups_flash", message);
+      } catch {
+        /* sessionStorage unavailable — list will just refresh without a toast */
+      }
+      router.push("/admin/groups");
+    } catch (e: any) {
+      setDeleteError(e?.message ?? "Failed to delete group");
+      setDeleting(false);
+    }
+  };
+
   if (token === null) return null;
 
   const outstanding = data ? Math.max(0, data.totalAmount - data.totalPaid) : 0;
@@ -134,6 +175,64 @@ export default function AdminGroupDetailPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 antialiased">
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-100 text-red-600">
+                <span className="material-symbols-outlined">warning</span>
+              </div>
+              <h2 className="text-lg font-black text-slate-900">Delete this group?</h2>
+            </div>
+            <p className="text-sm font-medium leading-relaxed text-slate-600">
+              This permanently deletes the group registration, all{" "}
+              <span className="font-black text-slate-900">
+                {data?.members.length ?? 3}
+              </span>{" "}
+              member student record(s), and their payments. This action{" "}
+              <span className="font-black text-red-700">cannot be undone</span>.
+            </p>
+
+            {deleteError && (
+              <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                {deleteError}
+              </div>
+            )}
+
+            <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deleting}
+                className="rounded-lg border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {deleting ? (
+                  <>
+                    <span className="material-symbols-outlined animate-spin text-[18px]">
+                      progress_activity
+                    </span>
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-[18px]">delete</span>
+                    Delete group
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <AdminHeader />
 
       <main className="px-4 py-8 md:px-10 lg:px-24">
@@ -174,14 +273,29 @@ export default function AdminGroupDetailPage() {
                     </h1>
                     <p className="mt-1 font-mono text-xs text-slate-400">{data._id}</p>
                   </div>
-                  <span
-                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ${
-                      STATUS_CONFIG[data.paymentStatus]?.cls ??
-                      "bg-slate-50 text-slate-700"
-                    }`}
-                  >
-                    {STATUS_CONFIG[data.paymentStatus]?.label ?? data.paymentStatus}
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ${
+                        STATUS_CONFIG[data.paymentStatus]?.cls ??
+                        "bg-slate-50 text-slate-700"
+                      }`}
+                    >
+                      {STATUS_CONFIG[data.paymentStatus]?.label ?? data.paymentStatus}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDeleteError(null);
+                        setShowDeleteConfirm(true);
+                      }}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-bold text-red-700 transition hover:bg-red-100"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">
+                        delete
+                      </span>
+                      Delete group
+                    </button>
+                  </div>
                 </div>
 
                 <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">

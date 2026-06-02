@@ -70,6 +70,24 @@ export default function AdminGroupsPage() {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
+  const [flash, setFlash] = useState<string | null>(null);
+
+  // Surface a one-off success message handed over from the detail page (e.g. delete).
+  useEffect(() => {
+    let msg: string | null = null;
+    try {
+      msg = sessionStorage.getItem("admin_groups_flash");
+      if (msg) sessionStorage.removeItem("admin_groups_flash");
+    } catch {
+      /* sessionStorage unavailable */
+    }
+    if (msg) {
+      setFlash(msg);
+      const t = setTimeout(() => setFlash(null), 4000);
+      return () => clearTimeout(t);
+    }
+  }, []);
+
   const queryString = useMemo(() => {
     const qs = new URLSearchParams();
     if (status !== "ALL") qs.set("status", status);
@@ -132,6 +150,15 @@ export default function AdminGroupsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 antialiased">
+      {flash && (
+        <div className="fixed bottom-8 right-8 z-50">
+          <div className="flex max-w-sm items-center gap-3 rounded-xl border border-emerald-200 bg-white px-5 py-4 text-emerald-800 shadow-xl">
+            <span className="material-symbols-outlined text-[20px]">check_circle</span>
+            <p className="text-sm font-semibold">{flash}</p>
+          </div>
+        </div>
+      )}
+
       <AdminHeader />
 
       <main className="flex-1 px-4 py-8 md:px-10 lg:px-24">
