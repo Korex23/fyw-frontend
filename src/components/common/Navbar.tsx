@@ -111,7 +111,10 @@ export function Header() {
                 >
                   Register
                 </Link>
-                <Link className={desktopLinkClass(groupActive)} href="/group">
+                <Link
+                  className={desktopLinkClass(groupActive)}
+                  href="/group/resume"
+                >
                   Group Payment
                 </Link>
                 <Link className={desktopLinkClass(loginActive)} href="/login">
@@ -190,7 +193,7 @@ export function Header() {
                 <Link
                   onClick={() => setOpen(false)}
                   className={mobileLinkClass(groupActive)}
-                  href="/group"
+                  href="/group/resume"
                 >
                   Group Payment
                 </Link>
