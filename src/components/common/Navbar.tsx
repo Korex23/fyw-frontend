@@ -27,6 +27,7 @@ export function Header() {
   const registerActive =
     pathname === "/register" || pathname.startsWith("/register");
   const loginActive = pathname === "/login";
+  const groupActive = pathname === "/group" || pathname.startsWith("/group");
 
   useEffect(() => {
     setIsLoggedIn(Boolean(localStorage.getItem("fyw_matric")));
@@ -110,6 +111,9 @@ export function Header() {
                 >
                   Register
                 </Link>
+                <Link className={desktopLinkClass(groupActive)} href="/group">
+                  Group Payment
+                </Link>
                 <Link className={desktopLinkClass(loginActive)} href="/login">
                   Login
                 </Link>
@@ -182,6 +186,13 @@ export function Header() {
                   href="/register"
                 >
                   Register
+                </Link>
+                <Link
+                  onClick={() => setOpen(false)}
+                  className={mobileLinkClass(groupActive)}
+                  href="/group"
+                >
+                  Group Payment
                 </Link>
                 <Link
                   onClick={() => setOpen(false)}
