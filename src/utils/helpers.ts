@@ -27,6 +27,8 @@ const FRIENDLY_MESSAGES: Record<string, string> = {
   "matricNumber already exists": "This matric number is already registered.",
   "Student not found": "No student found with this matric number.",
   "Package already fully paid": "This package has already been fully paid.",
+  "This student is part of a group registration and must pay through the group.":
+    "You're part of a group registration — please pay through your group page, not individually.",
   "Amount must be greater than 0": "Payment amount must be greater than zero.",
   "Failed to initialize payment":
     "Payment could not be started. Please try again.",

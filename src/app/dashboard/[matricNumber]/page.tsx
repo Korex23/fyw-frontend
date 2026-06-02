@@ -23,6 +23,7 @@ type Student = {
   matricNumber: string;
   email?: string;
   phone?: string;
+  groupRegistrationId?: string | null;
   totalPaid: number;
   paymentStatus: "NOT_PAID" | "PARTIALLY_PAID" | "FULLY_PAID";
   packageId: ApiPackage;
@@ -139,6 +140,7 @@ export default function DashboardPage() {
   }
 
   const isFullyPaid = student?.paymentStatus === "FULLY_PAID";
+  const isGroupMember = Boolean(student?.groupRegistrationId);
 
   const upgradeOptions = allPackages.filter((p) => p.price > (pkg?.price ?? 0));
   const downgradeOptions = allPackages.filter((p) => p.price < (pkg?.price ?? 0));
@@ -464,7 +466,30 @@ export default function DashboardPage() {
                 </div>
               )}
 
-              {!isFullyPaid && (
+              {isGroupMember && !isFullyPaid && (
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-bold text-emerald-900">
+                        Part of a group registration
+                      </p>
+                      <p className="text-xs font-medium text-emerald-800/80">
+                        Payments for your spot are made through your group, not
+                        individually.
+                      </p>
+                    </div>
+                    <Link
+                      href={`/group/${encodeURIComponent(student.groupRegistrationId ?? "")}`}
+                      className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[#2D6A4F] px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-110"
+                    >
+                      <span className="material-symbols-outlined text-base">groups</span>
+                      Go to group payment
+                    </Link>
+                  </div>
+                </div>
+              )}
+
+              {!isGroupMember && !isFullyPaid && (
                 <form
                   onSubmit={onPayNow}
                   className="border-t border-slate-100 pt-6"
@@ -584,7 +609,7 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-        {upgradeOptions.length > 0 && (
+        {!isGroupMember && upgradeOptions.length > 0 && (
           <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
             <h3 className="mb-1 text-lg font-black text-slate-900">
               Upgrade Your Package
@@ -735,7 +760,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {!isFullyPaid && downgradeOptions.length > 0 && (
+        {!isGroupMember && !isFullyPaid && downgradeOptions.length > 0 && (
           <div className="rounded-xl border border-amber-200 bg-white p-6 shadow-sm">
             <h3 className="mb-1 text-lg font-black text-slate-900">
               Downgrade Your Package

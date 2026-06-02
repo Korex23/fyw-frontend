@@ -420,6 +420,38 @@ export default function Packages() {
         )}
       </section>
 
+      {/* ── GROUP PACKAGE ────────────────────────────────────────────────── */}
+      <section className="mx-auto max-w-7xl px-4 pb-4 sm:px-6">
+        <div className="relative overflow-hidden rounded-3xl border border-emerald-200 bg-gradient-to-br from-[#1B5E20] to-[#2D6A4F] p-8 text-white sm:p-12">
+          <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+          <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div className="max-w-xl">
+              <span className="mb-3 inline-block rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-[11px] font-black uppercase tracking-widest backdrop-blur">
+                Coming as a squad?
+              </span>
+              <h2 className="text-3xl font-black tracking-tight sm:text-4xl">
+                Group Package — 3 Friends, Full Experience
+              </h2>
+              <p className="mt-3 text-sm font-medium text-white/80 sm:text-base">
+                Register 3 members for the full five-day Experience and save{" "}
+                <span className="font-black text-white">10%</span> — pay{" "}
+                <span className="font-black text-white">₦162,000</span> instead of{" "}
+                <span className="line-through">₦180,000</span>. Split it however you
+                like — pay in instalments until it&apos;s covered, then everyone gets
+                their invite.
+              </p>
+            </div>
+            <Link
+              href="/group"
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-7 py-4 font-bold text-[#1B5E20] shadow-lg transition hover:brightness-95"
+            >
+              Register a Group
+              <span className="material-symbols-outlined text-lg">groups</span>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* ── FAQ ──────────────────────────────────────────────────────────── */}
       <section className="bg-white px-4 py-16 sm:px-6 sm:py-20">
         <div className="mx-auto max-w-2xl">

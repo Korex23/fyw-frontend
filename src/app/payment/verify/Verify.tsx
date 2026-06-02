@@ -40,6 +40,13 @@ export default function PaymentVerifyPage() {
     );
   }, [searchParams]);
 
+  // Group payments carry these on the redirect back from the gateway.
+  const type = useMemo(() => firstParam(searchParams, "type"), [searchParams]);
+  const groupIdParam = useMemo(
+    () => firstParam(searchParams, "groupId"),
+    [searchParams],
+  );
+
   const [status, setStatus] = useState<"verifying" | "error">("verifying");
   const [error, setError] = useState<string | null>(null);
 
@@ -63,15 +70,39 @@ export default function PaymentVerifyPage() {
           throw new Error(parseApiError(res.status, json));
         }
 
-        const matricNumber = extractMatricNumber(json);
+        // --- Group payment: branch on the redirect's type/groupId flag. ---
+        const isGroup =
+          type === "group" ||
+          Boolean(groupIdParam) ||
+          Boolean(localStorage.getItem("fyw_pending_group"));
 
-        if (!matricNumber) {
-          throw new Error(
-            "Payment verified, but matric number was not found in the response metadata.",
-          );
+        if (isGroup) {
+          const groupId =
+            groupIdParam ||
+            localStorage.getItem("fyw_pending_group") ||
+            localStorage.getItem("fyw_group_id");
+          localStorage.removeItem("fyw_pending_group");
+
+          if (groupId) {
+            localStorage.setItem("fyw_group_id", groupId);
+            router.replace(`/group/${encodeURIComponent(groupId)}`);
+            return;
+          }
+          // Group payment but no id anywhere — let them look it up.
+          router.replace("/group/resume");
+          return;
         }
 
-        router.replace(`/dashboard/${encodeURIComponent(matricNumber)}`);
+        // --- Individual payment (unchanged). ---
+        const matricNumber = extractMatricNumber(json);
+        if (matricNumber) {
+          router.replace(`/dashboard/${encodeURIComponent(matricNumber)}`);
+          return;
+        }
+
+        throw new Error(
+          "Payment verified, but we couldn't determine which registration it belongs to.",
+        );
       } catch (e: any) {
         setStatus("error");
         setError(e?.message ?? "Something went wrong verifying payment.");
@@ -79,7 +110,7 @@ export default function PaymentVerifyPage() {
     };
 
     verify();
-  }, [reference, router]);
+  }, [reference, type, groupIdParam, router]);
 
   return (
     <div className="min-h-screen bg-[#F3F4F6] px-4 py-10 text-slate-900">

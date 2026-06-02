@@ -13,6 +13,12 @@ type Metrics = {
   notPaidCount: number;
   totalRevenue: number;
   outstandingTotal: number;
+  groups?: {
+    totalGroups: number;
+    fullyPaidGroups: number;
+    pendingGroups: number;
+    groupRevenue: number;
+  };
 };
 
 function formatNaira(n: number) {
@@ -152,6 +158,51 @@ export default function AdminDashboardPage() {
             />
           </div>
 
+          {/* Group metrics */}
+          <div className="mt-10 mb-4 flex items-center justify-between">
+            <h2 className="text-xl font-black tracking-tight md:text-2xl">
+              Groups
+            </h2>
+            <Link
+              href="/admin/groups"
+              className="text-sm font-bold text-emerald-900 hover:underline"
+            >
+              View all groups
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <StatCard
+              icon="groups"
+              label="Total Groups"
+              value={loading ? null : String(metrics?.groups?.totalGroups ?? 0)}
+              accent="slate"
+            />
+            <StatCard
+              icon="verified"
+              label="Fully Paid Groups"
+              value={
+                loading ? null : String(metrics?.groups?.fullyPaidGroups ?? 0)
+              }
+              accent="emerald"
+            />
+            <StatCard
+              icon="hourglass_top"
+              label="Pending Groups"
+              value={loading ? null : String(metrics?.groups?.pendingGroups ?? 0)}
+              accent="amber"
+            />
+            <StatCard
+              icon="payments"
+              label="Group Revenue"
+              value={
+                loading ? null : formatNaira(metrics?.groups?.groupRevenue ?? 0)
+              }
+              accent="emerald"
+              large
+            />
+          </div>
+
           {/* Quick links */}
           <div className="mt-8 flex flex-wrap gap-4">
             <Link
@@ -162,6 +213,15 @@ export default function AdminDashboardPage() {
                 people
               </span>
               View All Students
+            </Link>
+            <Link
+              href="/admin/groups"
+              className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3.5 text-sm font-bold text-slate-700 shadow-sm transition-all hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-900"
+            >
+              <span className="material-symbols-outlined text-[20px]">
+                groups
+              </span>
+              View All Groups
             </Link>
           </div>
         </div>
@@ -279,6 +339,12 @@ function AdminHeader() {
             href="/admin/students"
           >
             Students
+          </Link>
+          <Link
+            className="text-sm font-medium text-slate-500 transition-colors hover:text-emerald-900"
+            href="/admin/groups"
+          >
+            Groups
           </Link>
         </nav>
 

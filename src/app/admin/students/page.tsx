@@ -24,6 +24,7 @@ type StudentApi = {
   email?: string;
   phone?: string;
   packageId?: PackageDoc | null; // backend returns populated object
+  groupRegistrationId?: string | null;
   totalPaid: number;
   paymentStatus: PaymentStatus;
   invites?: {
@@ -55,6 +56,7 @@ type StudentRow = {
   totalPaid: number;
   outstanding: number;
   package?: { code: PackageCode; name: string } | null;
+  groupRegistrationId?: string | null;
 };
 
 function formatNaira(n: number) {
@@ -180,6 +182,7 @@ export default function AdminStudentsPage() {
             package: s.packageId
               ? { code: s.packageId.code, name: s.packageId.name }
               : null,
+            groupRegistrationId: s.groupRegistrationId ?? null,
           };
         });
 
@@ -398,7 +401,24 @@ export default function AdminStudentsPage() {
                           </td>
 
                           <td className="px-6 py-4 text-sm font-semibold text-slate-900">
-                            {row.fullName}
+                            <div className="flex flex-col gap-1">
+                              <span>{row.fullName}</span>
+                              {row.groupRegistrationId ? (
+                                <Link
+                                  href={`/admin/groups/${row.groupRegistrationId}`}
+                                  className="inline-flex w-fit items-center gap-1 rounded border border-purple-100 bg-purple-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-purple-700 hover:bg-purple-100"
+                                >
+                                  <span className="material-symbols-outlined text-[12px]">
+                                    groups
+                                  </span>
+                                  Group
+                                </Link>
+                              ) : (
+                                <span className="inline-flex w-fit items-center rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                                  Individual
+                                </span>
+                              )}
+                            </div>
                           </td>
 
                           <td className="px-6 py-4 text-sm">
@@ -522,6 +542,12 @@ export default function AdminStudentsPage() {
               href="/admin/students"
             >
               Students
+            </Link>
+            <Link
+              className="text-sm font-medium text-slate-500 transition-colors hover:text-emerald-900"
+              href="/admin/groups"
+            >
+              Groups
             </Link>
           </nav>
 

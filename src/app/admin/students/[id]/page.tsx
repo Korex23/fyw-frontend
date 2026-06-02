@@ -19,6 +19,7 @@ type StudentDoc = {
   phone?: string;
   department?: string;
   packageId?: { _id: string; code: string; name: string; price: number } | null;
+  groupRegistrationId?: string | null;
   selectedDays?: string[];
   totalPaid: number;
   paymentStatus: PaymentStatus;
@@ -49,6 +50,7 @@ type DetailData = {
   payments: Payment[];
   totalPaid: number;
   outstanding: number;
+  effectivePrice?: number; // group member → their ₦54,000 share; else package price
 };
 
 type Toast = { id: number; message: string; type: "success" | "error" } | null;
@@ -365,6 +367,33 @@ export default function AdminStudentDetailPage() {
                       </p>
                       <p className="mt-0.5 text-base font-bold text-slate-900">
                         {data.package?.name ?? data.student.packageId?.name ?? "—"}
+                      </p>
+                      {data.student.groupRegistrationId && (
+                        <Link
+                          href={`/admin/groups/${data.student.groupRegistrationId}`}
+                          className="mt-1 inline-flex w-fit items-center gap-1 rounded border border-purple-100 bg-purple-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-purple-700 hover:bg-purple-100"
+                        >
+                          <span className="material-symbols-outlined text-[12px]">
+                            groups
+                          </span>
+                          Group member · view group
+                        </Link>
+                      )}
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-medium text-slate-400">
+                        {data.student.groupRegistrationId
+                          ? "Group Share"
+                          : "Price"}
+                      </p>
+                      <p className="mt-0.5 text-base font-bold text-slate-900">
+                        {formatNaira(
+                          data.effectivePrice ??
+                            data.package?.price ??
+                            data.student.packageId?.price ??
+                            0,
+                        )}
                       </p>
                     </div>
 
@@ -703,6 +732,12 @@ function AdminHeader() {
             href="/admin/students"
           >
             Students
+          </Link>
+          <Link
+            className="text-sm font-medium text-slate-500 transition-colors hover:text-emerald-900"
+            href="/admin/groups"
+          >
+            Groups
           </Link>
         </nav>
 
