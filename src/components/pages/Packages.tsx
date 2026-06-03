@@ -4,6 +4,7 @@ import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Header } from "../common/Navbar";
+import { AnnouncementBanner, GroupDiscountModal } from "../common/GroupPromo";
 import type { Pkg, PackageType } from "@/types";
 import { parseApiError } from "@/utils/helpers";
 
@@ -194,8 +195,13 @@ export default function Packages() {
   }, [packages.length]);
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-[#F9FAFB] font-sans text-slate-800">
-      <Header />
+    <>
+      <GroupDiscountModal />
+      <div className="sticky top-0 z-50">
+        <AnnouncementBanner />
+        <Header />
+      </div>
+      <div className="min-h-screen w-full overflow-x-hidden bg-[#F9FAFB] font-sans text-slate-800">
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-[#1B5E20] px-4 py-20 text-white sm:px-6 sm:py-28">
@@ -530,7 +536,8 @@ export default function Packages() {
         <span className="font-bold text-[#1B5E20]">Built by Korex</span>
         <span className="ml-2">© 2026 ULES</span>
       </footer>
-    </div>
+      </div>
+    </>
   );
 }
 
