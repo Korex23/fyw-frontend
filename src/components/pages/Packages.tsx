@@ -56,24 +56,6 @@ const SCHEDULE = [
     key: "WED",
     short: "Wed",
     day: "Wednesday",
-    theme: "Jersey Day & Inter-House Sports",
-    icon: "sports",
-    color: "bg-purple-700",
-    descriptionRaw: {
-      intro:
-        "Think about inter-house sports in primary/secondary school — the noise, the drums, the competition, the fun. Now imagine that with your final year set. You'll be grouped into colour teams according to the colour of your jersey, and it's game on:",
-      bullets: [
-        "Sack race, egg race, relays",
-        "5-a-side football",
-        "Fun team challenges",
-      ],
-      note: "Whether you're playing or just shouting support — it will be loud, competitive, and fun. Party packs included!",
-    } satisfies DayDescription,
-  },
-  {
-    key: "THU",
-    short: "Thu",
-    day: "Thursday",
     theme: "Costume Day",
     icon: "theater_comedy",
     color: "bg-orange-600",
@@ -86,6 +68,24 @@ const SCHEDULE = [
         "A party to end the day",
       ],
       note: "This is not the day to play safe.",
+    } satisfies DayDescription,
+  },
+  {
+    key: "THU",
+    short: "Thu",
+    day: "Thursday",
+    theme: "Jersey Day & Inter-House Sports",
+    icon: "sports",
+    color: "bg-purple-700",
+    descriptionRaw: {
+      intro:
+        "Think about inter-house sports in primary/secondary school — the noise, the drums, the competition, the fun. Now imagine that with your final year set. You'll be grouped into colour teams according to the colour of your jersey, and it's game on:",
+      bullets: [
+        "Sack race, egg race, relays",
+        "5-a-side football",
+        "Fun team challenges",
+      ],
+      note: "Whether you're playing or just shouting support — it will be loud, competitive, and fun. Party packs included!",
     } satisfies DayDescription,
   },
   {

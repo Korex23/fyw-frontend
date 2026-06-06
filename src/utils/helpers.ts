@@ -8,6 +8,39 @@ export function formatNaira(value: number) {
 }
 
 // ---------------------------------------------------------------------------
+// Event days & theme labels (Wed = Costume Day, Thu = Jersey Day)
+// ---------------------------------------------------------------------------
+
+export const DAY_ORDER = [
+  "MONDAY",
+  "TUESDAY",
+  "WEDNESDAY",
+  "THURSDAY",
+  "FRIDAY",
+] as const;
+
+export const DAY_LABELS: Record<string, string> = {
+  MONDAY: "Monday - Corporate Day",
+  TUESDAY: "Tuesday - Denim Day",
+  WEDNESDAY: "Wednesday - Costume Day",
+  THURSDAY: "Thursday - Jersey Day",
+  FRIDAY: "Friday - Cultural Day/Owambe",
+};
+
+/** Sorts day keys into calendar order and joins them with their theme labels. */
+export function formatDays(days: string[] | undefined | null): string {
+  if (!days || days.length === 0) return "—";
+  return [...days]
+    .sort(
+      (a, b) =>
+        (DAY_ORDER as readonly string[]).indexOf(a) -
+        (DAY_ORDER as readonly string[]).indexOf(b),
+    )
+    .map((d) => DAY_LABELS[d] ?? d)
+    .join(", ");
+}
+
+// ---------------------------------------------------------------------------
 // API error parsing
 // ---------------------------------------------------------------------------
 

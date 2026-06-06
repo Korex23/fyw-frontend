@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Header } from "@/components/common/Navbar";
-import { formatNaira, parseApiError } from "@/utils/helpers";
+import { formatNaira, formatDays, parseApiError } from "@/utils/helpers";
 import { useParams, useRouter } from "next/navigation";
 
 const API_BASE = "https://fyw-api.blessedbid.com";
@@ -73,6 +73,14 @@ export default function DashboardPage() {
   const [upgradePendingCode, setUpgradePendingCode] = useState<string | null>(null);
   const [upgradeAnchorC, setUpgradeAnchorC] = useState<string>("");
   const [upgradeOtherDaysC, setUpgradeOtherDaysC] = useState<string[]>([]);
+
+  const [showChangeDays, setShowChangeDays] = useState(false);
+  const [changeDaysT, setChangeDaysT] = useState<string[]>([]);
+  const [changeAnchorC, setChangeAnchorC] = useState<string>("");
+  const [changeOtherDaysC, setChangeOtherDaysC] = useState<string[]>([]);
+  const [changingDays, setChangingDays] = useState(false);
+  const [changeDaysError, setChangeDaysError] = useState<string | null>(null);
+  const [changeDaysSuccess, setChangeDaysSuccess] = useState(false);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/students/packages`, { cache: "no-store" })
@@ -239,6 +247,83 @@ export default function DashboardPage() {
     } finally {
       setUpgrading(null);
       setUpgradePendingCode(null);
+    }
+  };
+
+  const openChangeDays = () => {
+    if (!student || !pkg) return;
+    const days = student.selectedDays ?? [];
+    if (pkg.code === "T") {
+      setChangeDaysT(days.filter((d) => d !== "FRIDAY"));
+    } else if (pkg.code === "C") {
+      const anchor = days.find((d) => d === "MONDAY" || d === "FRIDAY") ?? "";
+      setChangeAnchorC(anchor);
+      setChangeOtherDaysC(days.filter((d) => d !== anchor));
+    }
+    setChangeDaysError(null);
+    setChangeDaysSuccess(false);
+    setShowChangeDays(true);
+  };
+
+  const cancelChangeDays = () => {
+    setShowChangeDays(false);
+    setChangeDaysError(null);
+    setChangeDaysT([]);
+    setChangeAnchorC("");
+    setChangeOtherDaysC([]);
+  };
+
+  const handleChangeDays = async () => {
+    if (!pkg) return;
+    let selectedDays: string[] = [];
+    if (pkg.code === "T") {
+      if (changeDaysT.length !== 2) {
+        setChangeDaysError("Please select exactly 2 days from Monday to Thursday.");
+        return;
+      }
+      selectedDays = changeDaysT;
+    } else if (pkg.code === "C") {
+      if (!changeAnchorC || changeOtherDaysC.length !== 2) {
+        setChangeDaysError(
+          "Please select your anchor day (Monday or Friday) and exactly 2 other days.",
+        );
+        return;
+      }
+      selectedDays = [changeAnchorC, ...changeOtherDaysC];
+    } else {
+      return;
+    }
+
+    setChangeDaysError(null);
+    setChangingDays(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/students/change-days`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ matricNumber, selectedDays }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json?.success) {
+        throw new Error(parseApiError(res.status, json));
+      }
+      const updated = json.data?.student;
+      if (updated) {
+        setStudent((prev) =>
+          prev
+            ? {
+                ...prev,
+                selectedDays: updated.selectedDays ?? prev.selectedDays,
+                invites: updated.invites ?? prev.invites,
+              }
+            : prev,
+        );
+      }
+      setShowChangeDays(false);
+      setChangeDaysSuccess(true);
+    } catch (e: any) {
+      setChangeDaysError(e?.message ?? "Could not update your days.");
+    } finally {
+      setChangingDays(false);
     }
   };
 
@@ -595,20 +680,202 @@ export default function DashboardPage() {
                     Days: All 5 Days
                   </div>
                 )}
-                {pkg.code === "C" && student.selectedDays?.length > 0 && (
-                  <div className="mt-4 text-sm font-medium opacity-80">
-                    Days: {student.selectedDays.join(", ")}
-                  </div>
-                )}
-                {pkg.code === "T" && student.selectedDays?.length > 0 && (
-                  <div className="mt-4 text-sm font-medium opacity-80">
-                    Days: {student.selectedDays.join(", ")}
-                  </div>
-                )}
+                {(pkg.code === "C" || pkg.code === "T") &&
+                  student.selectedDays?.length > 0 && (
+                    <div className="mt-4 text-sm font-medium opacity-80">
+                      Days: {formatDays(student.selectedDays)}
+                    </div>
+                  )}
               </div>
             </div>
           </div>
         </div>
+        {!isGroupMember && pkg.code !== "F" && (
+          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h3 className="text-lg font-black text-slate-900">
+                  Your Event Days
+                </h3>
+                <p className="text-sm text-slate-500">
+                  {pkg.code === "C"
+                    ? "Pick Monday or Friday as your anchor day, plus any 2 other days."
+                    : "Pick any 2 days from Monday to Thursday — no Friday."}
+                </p>
+              </div>
+              {!showChangeDays && (
+                <button
+                  type="button"
+                  onClick={openChangeDays}
+                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-[#2D6A4F] bg-white px-4 py-2 text-sm font-bold text-[#2D6A4F] transition hover:bg-emerald-50"
+                >
+                  <span className="material-symbols-outlined text-base">
+                    edit_calendar
+                  </span>
+                  Change days
+                </button>
+              )}
+            </div>
+
+            {!showChangeDays && (
+              <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50 p-4">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  Current days
+                </p>
+                <p className="mt-1 text-sm font-bold text-slate-800">
+                  {formatDays(student.selectedDays)}
+                </p>
+                {changeDaysSuccess && (
+                  <p className="mt-2 text-xs font-bold text-emerald-700">
+                    Your days were updated.
+                    {isFullyPaid ? " Your invite has been regenerated." : ""}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {changeDaysError && (
+              <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {changeDaysError}
+              </div>
+            )}
+
+            {showChangeDays && (
+              <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                {pkg.code === "T" && (
+                  <div>
+                    <p className="mb-1 text-xs font-bold uppercase tracking-wider text-slate-600">
+                      Pick 2 days (Mon – Thu) — {changeDaysT.length}/2
+                    </p>
+                    <p className="mb-3 text-[11px] text-slate-500">
+                      Friday is not included on this package.
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      {["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY"].map(
+                        (day) => {
+                          const active = changeDaysT.includes(day);
+                          return (
+                            <button
+                              key={day}
+                              type="button"
+                              onClick={() =>
+                                setChangeDaysT((prev) =>
+                                  prev.includes(day)
+                                    ? prev.filter((d) => d !== day)
+                                    : prev.length < 2
+                                      ? [...prev, day]
+                                      : prev,
+                                )
+                              }
+                              className={`rounded-lg border px-4 py-2 text-xs font-bold capitalize transition ${
+                                active
+                                  ? "border-[#2D6A4F] bg-[#2D6A4F] text-white"
+                                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                              }`}
+                            >
+                              {day.charAt(0) + day.slice(1).toLowerCase()}
+                            </button>
+                          );
+                        },
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {pkg.code === "C" && (
+                  <div>
+                    <p className="mb-1 text-xs font-bold uppercase tracking-wider text-slate-600">
+                      Step 1 — Pick anchor day:
+                    </p>
+                    <div className="mb-3 grid grid-cols-2 gap-2">
+                      {(["MONDAY", "FRIDAY"] as const).map((day) => {
+                        const label =
+                          day === "MONDAY"
+                            ? "Monday (Corporate Day)"
+                            : "Friday (Owambe Day)";
+                        return (
+                          <button
+                            key={day}
+                            type="button"
+                            onClick={() => {
+                              setChangeAnchorC((prev) =>
+                                prev === day ? "" : day,
+                              );
+                              setChangeOtherDaysC([]);
+                            }}
+                            className={`rounded-lg border px-4 py-2 text-xs font-bold capitalize transition ${
+                              changeAnchorC === day
+                                ? "border-[#2D6A4F] bg-[#2D6A4F] text-white"
+                                : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="mb-1 text-xs font-bold uppercase tracking-wider text-slate-600">
+                      Step 2 — Pick 2 more days ({changeOtherDaysC.length}/2):
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      {["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"]
+                        .filter((d) => d !== changeAnchorC)
+                        .map((day) => {
+                          const noAnchor = !changeAnchorC;
+                          const active = changeOtherDaysC.includes(day);
+                          return (
+                            <button
+                              key={day}
+                              type="button"
+                              disabled={noAnchor}
+                              onClick={() =>
+                                setChangeOtherDaysC((prev) =>
+                                  prev.includes(day)
+                                    ? prev.filter((d) => d !== day)
+                                    : prev.length < 2
+                                      ? [...prev, day]
+                                      : prev,
+                                )
+                              }
+                              className={`rounded-lg border px-4 py-2 text-xs font-bold capitalize transition ${
+                                noAnchor
+                                  ? "cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300"
+                                  : active
+                                    ? "border-[#2D6A4F] bg-[#2D6A4F] text-white"
+                                    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                              }`}
+                            >
+                              {day.charAt(0) + day.slice(1).toLowerCase()}
+                            </button>
+                          );
+                        })}
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-4 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={handleChangeDays}
+                    disabled={changingDays}
+                    className="rounded-lg bg-[#2D6A4F] px-5 py-2 text-sm font-bold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {changingDays ? "Saving..." : "Save days"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={cancelChangeDays}
+                    disabled={changingDays}
+                    className="rounded-lg border border-slate-200 bg-white px-5 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {!isGroupMember && upgradeOptions.length > 0 && (
           <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
             <h3 className="mb-1 text-lg font-black text-slate-900">

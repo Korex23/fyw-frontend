@@ -6,6 +6,13 @@ import { useRouter } from "next/navigation";
 
 const API_BASE = "https://fyw-api.blessedbid.com";
 
+type DayBreakdownEntry = {
+  day: string;
+  label: string;
+  startedCount: number;
+  fullyPaidCount: number;
+};
+
 type Metrics = {
   totalStudents: number;
   fullyPaidCount: number;
@@ -13,6 +20,9 @@ type Metrics = {
   notPaidCount: number;
   totalRevenue: number;
   outstandingTotal: number;
+  startedPayersOutstanding?: number;
+  projectedRevenueIfStartedComplete?: number;
+  dayBreakdown?: DayBreakdownEntry[];
   groups?: {
     totalGroups: number;
     fullyPaidGroups: number;
@@ -156,7 +166,40 @@ export default function AdminDashboardPage() {
               accent="red"
               large
             />
+            <StatCard
+              icon="trending_up"
+              label="Expected from active payers"
+              value={
+                loading
+                  ? null
+                  : formatNaira(metrics?.startedPayersOutstanding ?? 0)
+              }
+              accent="amber"
+              large
+              subtitle={
+                loading
+                  ? undefined
+                  : `Projected total: ${formatNaira(
+                      metrics?.projectedRevenueIfStartedComplete ?? 0,
+                    )}`
+              }
+            />
           </div>
+
+          {/* Attendance by day */}
+          <div className="mt-10 mb-4">
+            <h2 className="text-xl font-black tracking-tight md:text-2xl">
+              Attendance by Day
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Paying students with access to each event day.
+            </p>
+          </div>
+
+          <DayBreakdown
+            rows={metrics?.dayBreakdown ?? []}
+            loading={loading}
+          />
 
           {/* Group metrics */}
           <div className="mt-10 mb-4 flex items-center justify-between">
@@ -266,8 +309,9 @@ function StatCard(props: {
   value: string | null;
   accent: Accent;
   large?: boolean;
+  subtitle?: string;
 }) {
-  const { icon, label, value, accent, large } = props;
+  const { icon, label, value, accent, large, subtitle } = props;
   const cls = ACCENT_CLASSES[accent];
 
   return (
@@ -294,7 +338,73 @@ function StatCard(props: {
             {value}
           </p>
         )}
+        {subtitle && value !== null && (
+          <p className="mt-1 text-xs font-medium text-slate-400">{subtitle}</p>
+        )}
       </div>
+    </div>
+  );
+}
+
+/* ─── Day Attendance Breakdown ───────────────────────────────────────────────── */
+
+function DayBreakdown({
+  rows,
+  loading,
+}: {
+  rows: DayBreakdownEntry[];
+  loading: boolean;
+}) {
+  const max = Math.max(1, ...rows.map((r) => r.startedCount));
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="mb-5 flex items-center gap-2 text-xs font-bold text-slate-500">
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block h-2.5 w-2.5 rounded-sm bg-emerald-500" />
+          Fully paid
+        </span>
+        <span className="ml-4 flex items-center gap-1.5">
+          <span className="inline-block h-2.5 w-2.5 rounded-sm bg-emerald-200" />
+          Started paying
+        </span>
+      </div>
+
+      {loading ? (
+        <div className="space-y-4">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="h-8 animate-pulse rounded-lg bg-slate-100" />
+          ))}
+        </div>
+      ) : rows.length === 0 ? (
+        <p className="text-sm text-slate-400">No attendance data available.</p>
+      ) : (
+        <div className="space-y-4">
+          {rows.map((r) => (
+            <div key={r.day}>
+              <div className="mb-1 flex items-center justify-between text-sm">
+                <span className="font-bold text-slate-700">{r.label}</span>
+                <span className="font-medium text-slate-500">
+                  <span className="font-black text-slate-900">
+                    {r.fullyPaidCount}
+                  </span>{" "}
+                  paid / {r.startedCount} started
+                </span>
+              </div>
+              <div className="relative h-3 w-full overflow-hidden rounded-full bg-slate-100">
+                <div
+                  className="absolute inset-y-0 left-0 rounded-full bg-emerald-200"
+                  style={{ width: `${(r.startedCount / max) * 100}%` }}
+                />
+                <div
+                  className="absolute inset-y-0 left-0 rounded-full bg-emerald-500"
+                  style={{ width: `${(r.fullyPaidCount / max) * 100}%` }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
