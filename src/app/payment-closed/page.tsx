@@ -77,7 +77,7 @@ export default function PaymentClosedPage() {
 
             {/* WhatsApp CTA */}
             <a
-              href="https://wa.me/2349024604200?text=Hi%2C%20I%20have%20an%20issue%20with%20my%20FYW%20payment%20and%20need%20some%20help."
+              href="https://wa.me/2349014420387?text=Hi%2C%20I%20have%20an%20issue%20with%20my%20FYW%20payment%20and%20need%20some%20help."
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Message the FYW committee on WhatsApp"
