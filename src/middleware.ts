@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 
 // Routes that remain accessible while payment is closed.
 // Everything else is redirected to /payment-closed.
-const ALLOWED_PREFIXES = ["/admin", "/payment-closed"];
+const ALLOWED_PREFIXES = ["/admin", "/payment-closed", "/payment/verify"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
