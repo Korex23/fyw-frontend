@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { parseApiError } from "@/utils/helpers";
 
@@ -24,12 +24,7 @@ function firstParam(params: URLSearchParams, key: string) {
   return all.length ? all[0] : null;
 }
 
-function extractMatricNumber(json: VerifyResponse): string | null {
-  return json?.data?.matricNumber ?? null;
-}
-
 export default function PaymentVerifyPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   const reference = useMemo(() => {
@@ -40,14 +35,9 @@ export default function PaymentVerifyPage() {
     );
   }, [searchParams]);
 
-  // Group payments carry these on the redirect back from the gateway.
-  const type = useMemo(() => firstParam(searchParams, "type"), [searchParams]);
-  const groupIdParam = useMemo(
-    () => firstParam(searchParams, "groupId"),
-    [searchParams],
+  const [status, setStatus] = useState<"verifying" | "success" | "error">(
+    "verifying",
   );
-
-  const [status, setStatus] = useState<"verifying" | "error">("verifying");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -70,39 +60,7 @@ export default function PaymentVerifyPage() {
           throw new Error(parseApiError(res.status, json));
         }
 
-        // --- Group payment: branch on the redirect's type/groupId flag. ---
-        const isGroup =
-          type === "group" ||
-          Boolean(groupIdParam) ||
-          Boolean(localStorage.getItem("fyw_pending_group"));
-
-        if (isGroup) {
-          const groupId =
-            groupIdParam ||
-            localStorage.getItem("fyw_pending_group") ||
-            localStorage.getItem("fyw_group_id");
-          localStorage.removeItem("fyw_pending_group");
-
-          if (groupId) {
-            localStorage.setItem("fyw_group_id", groupId);
-            router.replace(`/group/${encodeURIComponent(groupId)}`);
-            return;
-          }
-          // Group payment but no id anywhere — let them look it up.
-          router.replace("/group/resume");
-          return;
-        }
-
-        // --- Individual payment (unchanged). ---
-        const matricNumber = extractMatricNumber(json);
-        if (matricNumber) {
-          router.replace(`/dashboard/${encodeURIComponent(matricNumber)}`);
-          return;
-        }
-
-        throw new Error(
-          "Payment verified, but we couldn't determine which registration it belongs to.",
-        );
+        setStatus("success");
       } catch (e: any) {
         setStatus("error");
         setError(e?.message ?? "Something went wrong verifying payment.");
@@ -110,7 +68,7 @@ export default function PaymentVerifyPage() {
     };
 
     verify();
-  }, [reference, type, groupIdParam, router]);
+  }, [reference]);
 
   return (
     <div className="min-h-screen bg-[#F3F4F6] px-4 py-10 text-slate-900">
@@ -118,7 +76,11 @@ export default function PaymentVerifyPage() {
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2D6A4F]/10 text-[#2D6A4F]">
             <span className="material-symbols-outlined">
-              {status === "verifying" ? "progress_activity" : "error"}
+              {status === "verifying"
+                ? "progress_activity"
+                : status === "success"
+                  ? "check_circle"
+                  : "error"}
             </span>
           </div>
 
@@ -129,7 +91,9 @@ export default function PaymentVerifyPage() {
             <h1 className="text-xl font-black">
               {status === "verifying"
                 ? "Verifying your payment..."
-                : "Verification failed"}
+                : status === "success"
+                  ? "Payment successful"
+                  : "Verification failed"}
             </h1>
           </div>
         </div>
@@ -145,7 +109,14 @@ export default function PaymentVerifyPage() {
 
         {status === "verifying" && (
           <p className="mt-4 text-sm font-medium text-slate-600">
-            Please don’t close this page. You’ll be redirected automatically.
+            Please don’t close this page while we confirm your payment.
+          </p>
+        )}
+
+        {status === "success" && (
+          <p className="mt-4 text-sm font-medium text-[#2D6A4F]">
+            Payment successful! Please check your email for confirmation and
+            next steps.
           </p>
         )}
 
